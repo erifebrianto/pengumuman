@@ -1,3 +1,4 @@
+<!-- Siswa Index View -->
 <div class="container">
   <div class="page-inner">
     <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
@@ -23,33 +24,74 @@
                 <th>Kelas</th>
                 <th>Status</th>
                 <th>Dibuat Pada</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              <?php $no = 1; foreach ($siswa as $row): ?>
+              <?php if (!empty($siswa)): ?>
+                <?php $no = 1; foreach ($siswa as $row): ?>
+                  <tr>
+                    <td><?= $no++ ?></td>
+                    <td><?= $row->nama_lengkap ?></td>
+                    <td><?= $row->nis ?></td>
+                    <td><?= $row->kelas ?></td>
+                    <td>
+                      <span class="badge bg-<?= $row->status == 'Lulus' ? 'success' : 'danger' ?>">
+                        <?= ucfirst($row->status) ?>
+                      </span>
+                    </td>
+                    <td><?= date('d-m-Y H:i', strtotime($row->created_at)) ?></td>
+                    <td>
+                      <button class="btn btn-sm btn-info" onclick="showDetail(<?= $row->id ?>)">Detail</button>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
                 <tr>
-                  <td><?= $no++ ?></td>
-                  <td><?= $row->nama_lengkap ?></td>
-                  <td><?= $row->nis ?></td>
-                  <td><?= $row->kelas ?></td>
-                  <td>
-                    <span class="badge bg-<?= $row->status == 'Lulus' ? 'success' : 'danger' ?>">
-                      <?= $row->status ?>
-                    </span>
-                  </td>
-                  <td><?= date('d-m-Y H:i', strtotime($row->created_at)) ?></td>
+                  <td colspan="7" class="text-center">Tidak ada data siswa</td>
                 </tr>
-              <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- DataTables CSS & JS -->
+<!-- Modal Detail Siswa -->
+<div class="modal fade" id="modalDetail" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDetailLabel">Detail Siswa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-2">
+          <div class="col-md-4 fw-bold">Nama Lengkap</div>
+          <div class="col-md-8" id="detail_nama">-</div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-md-4 fw-bold">Kelas</div>
+          <div class="col-md-8" id="detail_kelas">-</div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-md-4 fw-bold">Status</div>
+          <div class="col-md-8" id="detail_status">-</div>
+        </div>
+        <div class="row">
+          <div class="col-md-4 fw-bold">Nilai</div>
+          <div class="col-md-8">
+            <ul id="detail_nilai" class="list-group list-group-flush"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DataTables & Bootstrap Scripts -->
 <link rel="stylesheet" href="//cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -64,4 +106,38 @@
       }
     });
   });
+
+  function showDetail(id) {
+    fetch('<?= base_url("siswa/detail/") ?>' + id)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('detail_nama').innerText = data.siswa.nama_lengkap;
+        document.getElementById('detail_kelas').innerText = data.siswa.kelas;
+        document.getElementById('detail_status').innerText = data.siswa.status;
+
+        const nilaiList = document.getElementById('detail_nilai');
+        nilaiList.innerHTML = '';
+
+        if (data.nilai.length > 0) {
+          data.nilai.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = `${item.nama_mata_pelajaran}: ${item.nilai}`;
+            nilaiList.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.className = 'list-group-item text-muted';
+          li.textContent = 'Belum ada nilai.';
+          nilaiList.appendChild(li);
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('modalDetail'));
+        modal.show();
+      })
+      .catch(error => {
+        console.error('Gagal memuat data detail:', error);
+        alert('Terjadi kesalahan saat mengambil data.');
+      });
+  }
 </script>

@@ -6,76 +6,83 @@ class Siswa extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->model('Siswa_model');
+        $this->load->model('Jurusan_model');
+        $this->load->model('Mata_pelajaran_model');
         $this->load->model('Nilai_model');
+        $this->load->library('form_validation');
         if (!$this->session->userdata('user_id')) {
             redirect('auth/login');
         }
     }
-
     public function index() {
-        $data['title'] = 'Data Siswa';
-        $data['siswa'] = $this->Siswa_model->get_all();
-        $this->load->view('templates/header', $data);
+        $this->load->model('Siswa_model');
+        $this->load->model('Jurusan_model');
+        $this->load->model('Mata_pelajaran_model');
+        $this->load->model('Nilai_model');
+    
+        $data['siswa'] = $this->db->get('siswa')->result();
+    
+        $this->load->view('templates/header');
         $this->load->view('siswa/index', $data);
         $this->load->view('templates/footer');
     }
-    public function create()
-    {
-        $this->load->model('Siswa_model');
+    public function detail($id) {
         $this->load->model('Nilai_model');
-        $this->load->model('Mapel_model');
-
+        $this->load->model('Mata_pelajaran_model');
+        $this->load->model('Jurusan_model');
+    
+        $siswa = $this->db->get_where('siswa', ['id' => $id])->row();
+        $nilai = $this->Nilai_model->get_nilai_with_mapel($id);
+    
+        echo json_encode([
+            'siswa' => $siswa,
+            'nilai' => $nilai
+        ]);
+    }    
+    public function create() {
         if ($this->input->post()) {
-            // Simpan data siswa
+            // Simpan siswa
             $siswa_data = [
-                'user_id'       => $this->session->userdata('user_id'),
-                'nama_lengkap'  => $this->input->post('nama_lengkap'),
-                'tempat_lahir'  => $this->input->post('tempat_lahir'),
-                'tanggal_lahir' => $this->input->post('tanggal_lahir'),
-                'nis'           => $this->input->post('nis'),
-                'nisn'          => $this->input->post('nisn'),
-                'kelas'         => $this->input->post('kelas'),
-                'nama_ortu'     => $this->input->post('nama_ortu'),
-                'rata_rata'     => $this->input->post('rata_rata'),
-                'status'        => $this->input->post('status'),
-                'created_at'    => date('Y-m-d H:i:s'),
+                'user_id'        => $this->session->userdata('user_id'),
+                'nama_lengkap'   => $this->input->post('nama_lengkap'),
+                'tempat_lahir'   => $this->input->post('tempat_lahir'),
+                'tanggal_lahir'  => $this->input->post('tanggal_lahir'),
+                'nis'            => $this->input->post('nis'),
+                'nisn'           => $this->input->post('nisn'),
+                'kelas'          => $this->input->post('kelas'),
+                'nama_ortu'      => $this->input->post('nama_ortu'),
+                'rata_rata'      => $this->input->post('rata_rata'),
+                'status'         => $this->input->post('status'),
+                'created_at'     => date('Y-m-d H:i:s')
             ];
+            $siswa_id = $this->Siswa_model->insert($siswa_data);
 
-            $this->Siswa_model->create($siswa_data);
-            $siswa_id = $this->db->insert_id();
-
-            // Simpan nilai siswa berdasarkan input form dinamis
-            $mata_pelajaran = $this->input->post('mata_pelajaran');
+            // Simpan nilai siswa
             $nilai = $this->input->post('nilai');
-
             $nilai_data = [];
-            if (!empty($mata_pelajaran)) {
-                foreach ($mata_pelajaran as $index => $mapel) {
-                    $nilai_data[] = [
-                        'siswa_id'        => $siswa_id,
-                        'mata_pelajaran'  => $mapel,
-                        'nilai'           => $nilai[$index],
-                    ];
-                }
-                $this->Nilai_model->create_batch($nilai_data);
+            foreach ($nilai as $mapel_id => $val) {
+                $nilai_data[] = [
+                    'siswa_id'  => $siswa_id,
+                    'mapel_id'  => $mapel_id,
+                    'nilai'     => $val
+                ];
             }
+            $this->Nilai_model->insert_batch($nilai_data);
 
             redirect('siswa');
         }
 
-        // Ambil mata pelajaran dari DB, lalu kelompokkan berdasarkan kelas
-        $mapel_all = $this->Mapel_model->get_all();
-        $kelas_mapel = [];
-        foreach ($mapel_all as $row) {
-            $kelas_mapel[$row['kelas']][] = $row['mata_pelajaran'];
-        }
-
-        $data['kelas_mapel'] = $kelas_mapel;
+        $data['jurusan'] = $this->Jurusan_model->get_all();
 
         $this->load->view('templates/header');
         $this->load->view('siswa/create', $data);
         $this->load->view('templates/footer');
     }
 
-
+    public function get_mapel_by_jurusan() {
+        $jurusan_id = $this->input->post('jurusan_id');
+        $mapel = $this->Mata_pelajaran_model->get_by_jurusan($jurusan_id);
+        echo json_encode($mapel);
+    }
+    
 }

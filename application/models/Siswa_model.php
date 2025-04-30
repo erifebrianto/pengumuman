@@ -27,4 +27,8 @@ class Siswa_model extends CI_Model {
     public function get_by_id($id) {
         return $this->db->get_where('siswa', ['id' => $id])->row();
     }
+    public function insert($data) {
+        $this->db->insert('siswa', $data);
+        return $this->db->insert_id();
+    }
 }

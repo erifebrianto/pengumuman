@@ -1,21 +1,13 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
 class Nilai_model extends CI_Model {
-
-    public function create_batch($data)
-    {
+    public function insert_batch($data) {
         return $this->db->insert_batch('nilai_siswa', $data);
     }
-
-    public function get_by_siswa($siswa_id)
-    {
-        return $this->db->get_where('nilai_siswa', ['siswa_id' => $siswa_id])->result();
-    }
-
-    // Tambahan jika ingin update batch nanti
-    public function update_batch($data)
-    {
-        return $this->db->update_batch('nilai_siswa', $data, 'id');
+    public function get_nilai_with_mapel($siswa_id) {
+        $this->db->select('nilai_siswa.nilai, mata_pelajaran.nama_mata_pelajaran');
+        $this->db->from('nilai_siswa');
+        $this->db->join('mata_pelajaran', 'nilai_siswa.mapel_id = mata_pelajaran.id');
+        $this->db->where('nilai_siswa.siswa_id', $siswa_id);
+        return $this->db->get()->result();
     }
 }
