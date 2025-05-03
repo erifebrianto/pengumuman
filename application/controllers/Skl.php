@@ -16,81 +16,62 @@ class Skl extends CI_Controller {
 
     public function search()
     {
-        $this->load->view('templates/header');
         $this->load->view('skl/search');
-        $this->load->view('templates/footer');
     }
-
-    public function result()
+public function result()
 {
     $nis = $this->input->post('nis');
     $siswa = $this->Siswa_model->get_by_nis($nis);
 
     if ($siswa) {
-        $templatePath = FCPATH . 'template/skl_template.docx';
-        $wordPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
-        $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
-
-        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
-        $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
-        $templateProcessor->setValue('nis', $siswa->nis);
-        $templateProcessor->setValue('kelas', $siswa->kelas);
-        $templateProcessor->setValue('status', ucfirst($siswa->status));
-        $templateProcessor->saveAs($wordPath);
-
-        // Konversi ke PDF menggunakan LibreOffice
-        $cmd = 'soffice --headless --convert-to pdf ' . escapeshellarg($wordPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
-        exec($cmd, $output, $returnCode);
-
-        if ($returnCode === 0 && file_exists($pdfPath)) {
-            redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
-        } else {
-            $this->session->set_flashdata('error', 'Gagal mengonversi Word ke PDF.');
-            redirect('skl/search');
-        }
+        $data['siswa'] = $siswa;
+        $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
     } else {
         $this->session->set_flashdata('error', 'Data tidak ditemukan!');
         redirect('skl/search');
     }
 }
 
+public function download_skl($nis)
+{
+    $siswa = $this->Siswa_model->get_by_nis($nis);
+    if ($siswa) {
+        // Path
+        $templatePath = FCPATH . 'template/skl_template.docx';
+        $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
+        $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
 
-    public function download_skl($nis)
-    {
-        // Mengambil data siswa dari database berdasarkan NIS
-        $siswa = $this->Siswa_model->get_by_nis($nis);
-        if ($siswa) {
-            // Generate Word
-            $templatePath = FCPATH . 'template/skl_template.docx';
-            $savePath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
+        // Generate Word
+        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+        $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
+        $templateProcessor->setValue('nis', $siswa->nis);
+        $templateProcessor->setValue('kelas', $siswa->kelas);
+        $templateProcessor->setValue('status', ucfirst($siswa->status));
+        $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+        $templateProcessor->saveAs($docxPath);
 
-            $templateProcessor = new TemplateProcessor($templatePath);
-            $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
-            $templateProcessor->setValue('nis', $siswa->nis);
-            $templateProcessor->setValue('kelas', $siswa->kelas);
-            $templateProcessor->setValue('status', ucfirst($siswa->status));
-            $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir);  // Pastikan ada field alamat di database
-            $templateProcessor->saveAs($savePath);
+        // Deteksi OS dan jalur LibreOffice
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        $sofficePath = $isWindows
+            ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
+            : '/usr/bin/soffice'; // Ubah jika beda lokasi di Linux hosting
 
-            // Check if file exists before converting
-            if (file_exists($savePath)) {
-                // Convert Word to HTML first
-                $phpWord = IOFactory::load($savePath);
-                $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
-                $htmlPath = FCPATH . 'temp/skl_' . $siswa->nis . '.html';
-                $htmlWriter->save($htmlPath);
+        // Konversi Word ke PDF
+        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+        exec($cmd, $output, $returnCode);
 
-                // Now convert HTML to PDF using dompdf
-                $this->convertHtmlToPdf($htmlPath, $siswa->nis);
-            } else {
-                $this->session->set_flashdata('error', 'Template SKL gagal disimpan.');
-                redirect('skl/search');
-            }
+        if ($returnCode === 0 && file_exists($pdfPath)) {
+            redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
         } else {
-            $this->session->set_flashdata('error', 'Data tidak ditemukan!');
+            $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF.');
             redirect('skl/search');
         }
+    } else {
+        $this->session->set_flashdata('error', 'Data siswa tidak ditemukan.');
+        redirect('skl/search');
     }
+}
+
 
     private function convertHtmlToPdf($htmlPath, $nis)
     {
