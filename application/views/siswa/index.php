@@ -7,8 +7,8 @@
         <h6 class="op-7 mb-2">Daftar lengkap siswa dan status kelulusannya</h6>
       </div>
       <div class="ms-md-auto py-2 py-md-0">
-        <a href="#" class="btn btn-label-info btn-round me-2">Export</a>
-        <a href="#" class="btn btn-primary btn-round">Tambah Siswa</a>
+        <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round me-2">Tambah Siswa</a>
+        <a href="<?php echo base_url();?>/siswa/import" class="btn btn-success btn-round">Import</a>
       </div>
     </div>
 

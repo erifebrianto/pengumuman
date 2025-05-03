@@ -31,4 +31,9 @@ class Siswa_model extends CI_Model {
         $this->db->insert('siswa', $data);
         return $this->db->insert_id();
     }
+    public function get_by_nis($nis)
+{
+    return $this->db->get_where('siswa', ['nis' => $nis])->row();
+}
+
 }

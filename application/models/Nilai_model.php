@@ -10,4 +10,13 @@ class Nilai_model extends CI_Model {
         $this->db->where('nilai_siswa.siswa_id', $siswa_id);
         return $this->db->get()->result();
     }
+        public function create($data)
+    {
+        return $this->db->insert('nilai_siswa', $data);
+    }
+
+    public function create_batch($data)
+    {
+        return $this->db->insert_batch('nilai_siswa', $data);
+    }
 }
