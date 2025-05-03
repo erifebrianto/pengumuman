@@ -56,8 +56,8 @@ public function download_skl($nis)
             ? '"C:\Program Files\LibreOffice\program\soffice.exe"'  // Path di Windows
             : '/opt/libreoffice6.4/program/soffice'; // Path di hosting Linux
 
-        // Gunakan filter writer_pdf_Export untuk konversi PDF
-        $cmd = $sofficePath . ' --headless --convert-to pdf:writer_pdf_Export ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+        // Gunakan opsi --page-size untuk set ukuran kertas menjadi Legal (8.5 x 14 inci)
+        $cmd = $sofficePath . ' --headless --convert-to pdf:writer_pdf_Export ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/') . ' --page-size=legal';
         exec($cmd, $output, $returnCode);
 
         // Cek jika PDF berhasil dihasilkan dan file PDF ada
