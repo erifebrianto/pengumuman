@@ -33,15 +33,14 @@ public function result()
 }
 public function download_skl($nis)
 {
-    // Mengambil data siswa berdasarkan NIS
     $siswa = $this->Siswa_model->get_by_nis($nis);
     if ($siswa) {
-        // Path untuk template Word dan file hasil konversi
+        // Path
         $templatePath = FCPATH . 'template/skl_template.docx';
         $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
         $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
 
-        // Generate Word menggunakan template
+        // Generate Word
         $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
         $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
         $templateProcessor->setValue('nis', $siswa->nis);
@@ -50,27 +49,24 @@ public function download_skl($nis)
         $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
         $templateProcessor->saveAs($docxPath);
 
-        // Menentukan path LibreOffice tergantung OS
+        // Deteksi OS dan jalur LibreOffice
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         $sofficePath = $isWindows
-            ? '"C:\Program Files\LibreOffice\program\soffice.exe"'  // Path di Windows
-            : '/opt/libreoffice6.4/program/soffice'; // Path di hosting Linux
+            ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
+            : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
 
-        // Gunakan opsi --page-size untuk set ukuran kertas menjadi Legal (8.5 x 14 inci)
-        $cmd = $sofficePath . ' --headless --convert-to pdf:writer_pdf_Export ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/') . ' --page-size=legal';
+        // Konversi Word ke PDF
+        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
         exec($cmd, $output, $returnCode);
 
-        // Cek jika PDF berhasil dihasilkan dan file PDF ada
+        // Cek apakah PDF berhasil dihasilkan
         if ($returnCode === 0 && file_exists($pdfPath)) {
-            // Redirect ke file PDF hasil konversi
             redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
         } else {
-            // Log error jika konversi gagal
-            $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF. Error: ' . implode("\n", $output));
+            $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF.');
             redirect('skl/search');
         }
     } else {
-        // Jika siswa tidak ditemukan
         $this->session->set_flashdata('error', 'Data siswa tidak ditemukan.');
         redirect('skl/search');
     }
