@@ -31,7 +31,6 @@ public function result()
         redirect('skl/search');
     }
 }
-
 public function download_skl($nis)
 {
     $siswa = $this->Siswa_model->get_by_nis($nis);
@@ -54,12 +53,13 @@ public function download_skl($nis)
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         $sofficePath = $isWindows
             ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
-            : '/usr/bin/soffice'; // Ubah jika beda lokasi di Linux hosting
+            : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
 
         // Konversi Word ke PDF
         $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
         exec($cmd, $output, $returnCode);
 
+        // Cek apakah PDF berhasil dihasilkan
         if ($returnCode === 0 && file_exists($pdfPath)) {
             redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
         } else {
@@ -71,6 +71,7 @@ public function download_skl($nis)
         redirect('skl/search');
     }
 }
+
 
 
     private function convertHtmlToPdf($htmlPath, $nis)
