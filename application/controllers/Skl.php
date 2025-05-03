@@ -56,7 +56,7 @@ public function download_skl($nis)
             : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
 
         // Konversi Word ke PDF
-        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/') . ' --paper-size=legal';
         exec($cmd, $output, $returnCode);
 
         // Cek apakah PDF berhasil dihasilkan
