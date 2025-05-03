@@ -56,11 +56,11 @@ public function download_skl($nis)
             ? '"C:\Program Files\LibreOffice\program\soffice.exe"'  // Path di Windows
             : '/opt/libreoffice6.4/program/soffice'; // Path di hosting Linux
 
-        // Konversi Word ke PDF dengan opsi ukuran kertas Legal
-        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/') . ' --paper-size=legal';
+        // Gunakan filter writer_pdf_Export untuk konversi PDF
+        $cmd = $sofficePath . ' --headless --convert-to pdf:writer_pdf_Export ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
         exec($cmd, $output, $returnCode);
 
-        // Cek jika konversi berhasil dan file PDF ada
+        // Cek jika PDF berhasil dihasilkan dan file PDF ada
         if ($returnCode === 0 && file_exists($pdfPath)) {
             // Redirect ke file PDF hasil konversi
             redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
@@ -75,7 +75,6 @@ public function download_skl($nis)
         redirect('skl/search');
     }
 }
-
 
 
 
