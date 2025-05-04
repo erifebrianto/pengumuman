@@ -96,8 +96,8 @@
                 <div class="collapse" id="pengaturan">
                   <ul class="nav nav-collapse">
                     <li>
-                      <a href="<?= base_url('pengaturan/user') ?>">
-                        <span class="sub-item">Pengguna</span>
+                      <a href="<?= base_url('setting') ?>">
+                        <span class="sub-item">Data Sekolah</span>
                       </a>
                     </li>
                     <li>
