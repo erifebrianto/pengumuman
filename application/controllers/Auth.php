@@ -8,7 +8,7 @@ class Auth extends CI_Controller {
 
     public function login() {
         if ($this->session->userdata('user_id')) {
-            redirect('auth/dashboard');
+            redirect('dashboard');
         }
 
         $this->form_validation->set_rules('username', 'Username', 'required');
