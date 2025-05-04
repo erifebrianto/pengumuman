@@ -27,25 +27,33 @@ class Skl extends CI_Controller {
         // Tambahkan ke data yang dikirim ke view
         $data['nama_sekolah'] = $pengaturan->nama_sekolah ?? 'Nama Sekolah';
         $data['logo_sekolah'] = $pengaturan->logo_sekolah ?? 'default_logo.png'; // fallback jika tidak ada
+        $data['background'] = $pengaturan->background ?? '';
 
         $this->load->view('skl/search', $data);
     }
 
     public function result()
     {
+        $nis = $this->input->post('nis');
         $no_ujian = $this->input->post('no_ujian');
-        $nis      = $this->input->post('nis');
 
-        $siswa = $this->Siswa_model->get_by_no_ujian_and_nis($no_ujian, $nis);
+        // Validasi format no_ujian
+        if (!preg_match('/^\d{4}-\d{4}-\d{3}$/', $no_ujian)) {
+            $this->session->set_flashdata('error', 'Format No. Ujian tidak valid. Contoh: 2025-0309-002');
+            redirect('skl/search');
+        }
+
+        $siswa = $this->Siswa_model->get_by_nis_and_no_ujian($nis, $no_ujian);
 
         if ($siswa) {
             $data['siswa'] = $siswa;
-            $this->load->view('skl/result', $data);
+            $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
         } else {
-            $this->session->set_flashdata('error', 'Data tidak ditemukan! Periksa kembali No. Ujian dan NIS.');
+            $this->session->set_flashdata('error', 'Data tidak ditemukan!');
             redirect('skl/search');
         }
     }
+
 /*    public function result()
     {
         $nis = $this->input->post('nis');

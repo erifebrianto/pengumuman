@@ -38,7 +38,8 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4" style="background-image: url('<?= base_url($background) ?>'); background-size: cover; background-repeat: no-repeat;">
+
   <div class="w-full max-w-md">
     <div class="search-box bg-white rounded-xl shadow-md p-8">
       <div class="text-center mb-6">
@@ -88,15 +89,15 @@
                 <i class="bi bi-123 text-gray-400"></i>
             </div>
             <input 
-                type="text" 
-                name="no_ujian" 
-                class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
-                placeholder="Masukkan No. Ujian" 
-                required
-                pattern="[0-9]*"
-                inputmode="numeric"
-                title="Masukkan hanya angka No. Ujian"
-            >
+              type="text" 
+              name="no_ujian" 
+              class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+              placeholder="Masukkan No. Ujian (contoh: 2025-0309-002)" 
+              required
+              pattern="\d{4}-\d{4}-\d{3}"
+              title="Format: 2025-0309-002"
+            />
+
         </div>
 
         <div class="relative">

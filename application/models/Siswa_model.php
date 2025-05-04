@@ -44,6 +44,15 @@ class Siswa_model extends CI_Model {
             'nis'      => $nis
         ])->row();
     }
+    // Siswa_model.php
+    public function get_by_nis_and_no_ujian($nis, $no_ujian)
+    {
+        return $this->db->get_where('siswa', [
+            'nis' => $nis,
+            'no_ujian' => $no_ujian
+        ])->row();
+    }
+
 
 
     public function count_by_status($status) {

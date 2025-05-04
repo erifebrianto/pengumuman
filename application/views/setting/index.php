@@ -62,6 +62,15 @@
     </div>
 
     <div class="form-group mb-4">
+        <label>Background Halaman SKL</label><br>
+        <?php if (!empty($pengaturan->background)) : ?>
+            <img src="<?= base_url($pengaturan->background); ?>" alt="Background SKL" style="max-height: 100px;"><br>
+        <?php endif; ?>
+        <input type="file" name="background" class="form-control-file mt-2">
+    </div>
+
+
+    <div class="form-group mb-4">
         <label>TTD Kepala Sekolah</label><br>
         <?php if (!empty($pengaturan->ttd_kepala_sekolah)) : ?>
             <img src="<?= base_url($pengaturan->ttd_kepala_sekolah); ?>" alt="TTD Kepala Sekolah" style="max-height: 100px;"><br>
