@@ -20,6 +20,7 @@
               <tr>
                 <th>No</th>
                 <th>Nama Lengkap</th>
+                <th>NO Ujian</th>
                 <th>NIS</th>
                 <th>Kelas</th>
                 <th>Status</th>
@@ -33,6 +34,7 @@
                   <tr>
                     <td><?= $no++ ?></td>
                     <td><?= $row->nama_lengkap ?></td>
+                    <td><?= $row->no_ujian ?></td>
                     <td><?= $row->nis ?></td>
                     <td><?= $row->kelas ?></td>
                     <td>

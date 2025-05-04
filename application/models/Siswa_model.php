@@ -31,9 +31,28 @@ class Siswa_model extends CI_Model {
         $this->db->insert('siswa', $data);
         return $this->db->insert_id();
     }
-    public function get_by_nis($nis)
-{
-    return $this->db->get_where('siswa', ['nis' => $nis])->row();
-}
+    public function get_by_nis($nis){
+        return $this->db->get_where('siswa', ['nis' => $nis])->row();
+    }
+        public function count_all() {
+        return $this->db->count_all('siswa');
+    }
+
+    public function count_by_status($status) {
+        return $this->db->where('status', $status)->count_all_results('siswa');
+    }
+
+    public function get_recent($limit = 10) {
+        return $this->db->order_by('id', 'DESC')->limit($limit)->get('siswa')->result_array();
+    }
+    public function get_kelulusan_per_kelas() {
+        $this->db->select('kelas, 
+                           SUM(CASE WHEN status = "lulus" THEN 1 ELSE 0 END) as lulus,
+                           SUM(CASE WHEN status = "tidak lulus" THEN 1 ELSE 0 END) as tidak_lulus');
+        $this->db->group_by('kelas');
+        $query = $this->db->get('siswa');
+        return $query->result_array();
+    }
+
 
 }

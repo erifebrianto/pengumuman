@@ -12,11 +12,13 @@ class Skl extends CI_Controller {
     {
         parent::__construct();
         $this->load->model('Siswa_model');
+        $this->load->model('Countdown_model');
     }
 
-    public function search()
-    {
-        $this->load->view('skl/search');
+    public function search(){
+
+        $data['countdown'] = $this->Countdown_model->get_target_time();
+        $this->load->view('skl/search', $data);
     }
 public function result()
 {
@@ -41,12 +43,29 @@ public function download_skl($nis)
         $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
 
         // Generate Word
-        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+        $templateProcessor = new TemplateProcessor($templatePath);
         $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
         $templateProcessor->setValue('nis', $siswa->nis);
         $templateProcessor->setValue('kelas', $siswa->kelas);
-        $templateProcessor->setValue('status', ucfirst($siswa->status));
+        $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
         $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+
+        // Gunakan rich text untuk status lulus / tidak lulus
+        $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
+
+        if (strtolower($siswa->status) === 'lulus') {
+            $statusRichText->addText('LULUS', ['bold' => true]);
+            $statusRichText->addText(' / ', []);
+            $statusRichText->addText('TIDAK LULUS', ['strikethrough' => true, 'color' => '888888']);
+        } else {
+            $statusRichText->addText('LULUS', ['strikethrough' => true, 'color' => '888888']);
+            $statusRichText->addText(' / ', []);
+            $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
+        }
+
+        // Set ke template
+        $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+
         $templateProcessor->saveAs($docxPath);
 
         // Deteksi OS dan jalur LibreOffice
@@ -71,8 +90,6 @@ public function download_skl($nis)
         redirect('skl/search');
     }
 }
-
-
 
 
     private function convertHtmlToPdf($htmlPath, $nis)
@@ -100,6 +117,10 @@ public function download_skl($nis)
     // Form untuk mengupload template SKL
     public function upload()
     {
+            if (!$this->session->userdata('user_id')) {
+            redirect('auth/login'); // Sesuaikan dengan URL login Anda
+            return;
+        }
         $this->load->helper('file');
 
         // Konfigurasi upload template SKL
@@ -127,6 +148,10 @@ public function download_skl($nis)
     // Form untuk upload template
     public function upload_form()
     {
+        if (!$this->session->userdata('user_id')) {
+        redirect('auth/login'); // Sesuaikan dengan URL login Anda
+        return;
+    }
         $this->load->view('templates/header');
         $this->load->view('skl/upload');
         $this->load->view('templates/footer');

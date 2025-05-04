@@ -53,6 +53,7 @@ class Siswa extends CI_Controller {
                 'tanggal_lahir'  => $this->input->post('tanggal_lahir'),
                 'nis'            => $this->input->post('nis'),
                 'nisn'           => $this->input->post('nisn'),
+                'no_ujian'       => $this->input->post('no_ujian'),
                 'kelas'          => $this->input->post('kelas'),
                 'nama_ortu'      => $this->input->post('nama_ortu'),
                 'rata_rata'      => $this->input->post('rata_rata'),
@@ -121,15 +122,16 @@ class Siswa extends CI_Controller {
                     'tanggal_lahir' => $row['C'],
                     'nis' => $row['D'],
                     'nisn' => $row['E'],
-                    'kelas' => $row['F'],
-                    'nama_ortu' => $row['G'],
-                    'rata_rata' => $row['H'],
-                    'status' => $row['I'],
+                    'no_ujian' => $row['F'], // Tambahan: Nomor Ujian
+                    'kelas' => $row['G'],
+                    'nama_ortu' => $row['H'],
+                    'rata_rata' => $row['I'],
+                    'status' => $row['J'],
                     'nilai_mapel' => []
                 ];
 
-                // Mulai dari kolom J, format: mapel di J, nilai di K, mapel di L, nilai di M, dst.
-                $col = 'J';
+                // Mulai dari kolom K untuk mapel/nilai
+                $col = 'K';
                 while (isset($row[$col]) && $row[$col] !== null) {
                     $mapel = $row[$col];
                     $col_nilai = ++$col;
@@ -141,7 +143,7 @@ class Siswa extends CI_Controller {
                             'nilai' => $nilai
                         ];
                     }
-                    $col = ++$col; // Pastikan kolom terus bergerak
+                    $col = ++$col; // Lanjut ke pasangan mapel/nilai berikutnya
                 }
 
                 $data['preview'][] = $siswa;
@@ -154,15 +156,13 @@ class Siswa extends CI_Controller {
         }
     }
 
-
-        public function do_import()
+    public function do_import()
     {
-        $this->load->model('Mapel_model'); // Pastikan model ini tersedia
+        $this->load->model('Mapel_model');
 
         $preview = $this->session->userdata('preview_data');
         if ($preview) {
             foreach ($preview as $row) {
-                // Simpan data siswa
                 $siswa_data = [
                     'user_id'       => $this->session->userdata('user_id'),
                     'nama_lengkap'  => $row['nama_lengkap'],
@@ -170,6 +170,7 @@ class Siswa extends CI_Controller {
                     'tanggal_lahir' => $row['tanggal_lahir'],
                     'nis'           => $row['nis'],
                     'nisn'          => $row['nisn'],
+                    'no_ujian'      => $row['no_ujian'], // Tambahan
                     'kelas'         => $row['kelas'],
                     'nama_ortu'     => $row['nama_ortu'],
                     'rata_rata'     => $row['rata_rata'],
@@ -180,7 +181,6 @@ class Siswa extends CI_Controller {
                 $this->Siswa_model->create($siswa_data);
                 $siswa_id = $this->db->insert_id();
 
-                // Simpan nilai mapel jika tersedia
                 if (isset($row['nilai_mapel']) && is_array($row['nilai_mapel'])) {
                     foreach ($row['nilai_mapel'] as $pair) {
                         $mapel = $this->Mapel_model->get_by_name($pair['mapel']);
@@ -198,6 +198,7 @@ class Siswa extends CI_Controller {
         }
         redirect('siswa');
     }
+
     public function test_word()
     {
         $phpWord = new PhpWord();

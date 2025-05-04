@@ -6,6 +6,9 @@ class Mata_pelajaran extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->model('Mata_pelajaran_model');
+        if (!$this->session->userdata('user_id')) {
+            redirect('auth/login');
+        }
     }
 
     public function index() {

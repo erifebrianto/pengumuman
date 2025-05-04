@@ -20,6 +20,9 @@
                     <input type="text" name="nisn" class="form-control" required>
                 </div>
                 <div class="col-md-6">
+                    <label>No Ujian</label>
+                    <input type="text" name="no_ujian" class="form-control" required>
+
                     <label>Kelas</label>
                     <input type="text" name="kelas" class="form-control" required>
 

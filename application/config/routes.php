@@ -53,9 +53,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
-$route['default_controller'] = 'auth/login';
+$route['default_controller'] = 'skl/search';
 $route['auth/login'] = 'auth/login';
 $route['auth/register'] = 'auth/register';
 $route['auth/dashboard'] = 'auth/dashboard';
 $route['auth/logout'] = 'auth/logout';
 $route['siswa'] = 'siswa/index';
+$route['settings/countdown'] = 'settings/countdown';

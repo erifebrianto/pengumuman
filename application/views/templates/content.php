@@ -223,7 +223,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/id.png"
+                                      src="assets/img/flags/id.png"
                                       alt="indonesia"
                                     />
                                   </div>
@@ -236,7 +236,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/us.png"
+                                      src="assets/img/flags/us.png"
                                       alt="united states"
                                     />
                                   </div>
@@ -249,7 +249,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/au.png"
+                                      src="assets/img/flags/au.png"
                                       alt="australia"
                                     />
                                   </div>
@@ -262,7 +262,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/ru.png"
+                                      src="assets/img/flags/ru.png"
                                       alt="russia"
                                     />
                                   </div>
@@ -275,7 +275,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/cn.png"
+                                      src="assets/img/flags/cn.png"
                                       alt="china"
                                     />
                                   </div>
@@ -288,7 +288,7 @@
                                 <td>
                                   <div class="flag">
                                     <img
-                                      src="<?php echo base_url();?>assets/img/flags/br.png"
+                                      src="assets/img/flags/br.png"
                                       alt="brazil"
                                     />
                                   </div>
@@ -350,7 +350,7 @@
                       <div class="item-list">
                         <div class="avatar">
                           <img
-                            src="<?php echo base_url();?>assets/img/jm_denis.jpg"
+                            src="assets/img/jm_denis.jpg"
                             alt="..."
                             class="avatar-img rounded-circle"
                           />
@@ -387,7 +387,7 @@
                       <div class="item-list">
                         <div class="avatar">
                           <img
-                            src="<?php echo base_url();?>assets/img/talha.jpg"
+                            src="assets/img/talha.jpg"
                             alt="..."
                             class="avatar-img rounded-circle"
                           />
@@ -406,7 +406,7 @@
                       <div class="item-list">
                         <div class="avatar">
                           <img
-                            src="<?php echo base_url();?>assets/img/chadengle.jpg"
+                            src="assets/img/chadengle.jpg"
                             alt="..."
                             class="avatar-img rounded-circle"
                           />
