@@ -49,7 +49,7 @@
 
         <!-- Nama Sekolah -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2"><?= $nama_sekolah ?></h2>
-        <p class="text-gray-500">Masukkan Nomor Ujian dan NIS untuk melihat kelulusan</p>
+        <p class="text-gray-500">Masukkan Nomor Induk Siswa (NIS) untuk melihat kelulusan</p>
       </div>
 
 
@@ -81,48 +81,31 @@
       </div>
 
 
-    <!-- Form Pencarian -->
-    <form method="post" action="<?= base_url('skl/result') ?>" class="space-y-4 <?= (time() < $target_timestamp) ? 'hidden' : '' ?>" id="form-box">
+      <!-- Form Pencarian -->
+      <form method="post" action="<?= base_url('skl/result') ?>" class="space-y-4 <?= (time() < $target_timestamp) ? 'hidden' : '' ?>" id="form-box">
         <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="bi bi-123 text-gray-400"></i>
-            </div>
-            <input 
-                type="text" 
-                name="no_ujian" 
-                class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
-                placeholder="Masukkan No. Ujian" 
-                required
-                pattern="[0-9]*"
-                inputmode="numeric"
-                title="Masukkan hanya angka No. Ujian"
-            >
-        </div>
-
-        <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="bi bi-person text-gray-400"></i>
-            </div>
-            <input 
-                type="text" 
-                name="nis" 
-                class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
-                placeholder="Masukkan NIS" 
-                required
-                pattern="[0-9]*"
-                inputmode="numeric"
-                title="Masukkan hanya angka NIS"
-            >
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="bi bi-123 text-gray-400"></i>
+          </div>
+          <input 
+            type="text" 
+            name="nis" 
+            class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+            placeholder="Masukkan NIS" 
+            required
+            pattern="[0-9]*"
+            inputmode="numeric"
+            title="Masukkan hanya angka NIS"
+          >
         </div>
         <button 
-            type="submit" 
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          type="submit" 
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
         >
-            <i class="bi bi-search"></i>
-            Cari Data
+          <i class="bi bi-search"></i>
+          Cari Data
         </button>
-    </form>
-
+      </form>
 
       <!-- Error Message -->
       <?php if ($this->session->flashdata('error')): ?>

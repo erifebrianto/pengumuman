@@ -15,81 +15,108 @@ class Skl extends CI_Controller {
         $this->load->model('Countdown_model');
     }
 
-    public function search(){
-
+    public function search()
+    {
+        // Ambil waktu countdown
         $data['countdown'] = $this->Countdown_model->get_target_time();
+
+        // Ambil data pengaturan dari database
+        $this->load->model('Setting_model');
+        $pengaturan = $this->Setting_model->get_first();
+
+        // Tambahkan ke data yang dikirim ke view
+        $data['nama_sekolah'] = $pengaturan->nama_sekolah ?? 'Nama Sekolah';
+        $data['logo_sekolah'] = $pengaturan->logo_sekolah ?? 'default_logo.png'; // fallback jika tidak ada
+
         $this->load->view('skl/search', $data);
     }
-public function result()
-{
-    $nis = $this->input->post('nis');
-    $siswa = $this->Siswa_model->get_by_nis($nis);
 
-    if ($siswa) {
-        $data['siswa'] = $siswa;
-        $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
-    } else {
-        $this->session->set_flashdata('error', 'Data tidak ditemukan!');
-        redirect('skl/search');
-    }
-}
-public function download_skl($nis)
-{
-    $siswa = $this->Siswa_model->get_by_nis($nis);
-    if ($siswa) {
-        // Path
-        $templatePath = FCPATH . 'template/skl_template.docx';
-        $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
-        $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
+    public function result()
+    {
+        $no_ujian = $this->input->post('no_ujian');
+        $nis      = $this->input->post('nis');
 
-        // Generate Word
-        $templateProcessor = new TemplateProcessor($templatePath);
-        $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
-        $templateProcessor->setValue('nis', $siswa->nis);
-        $templateProcessor->setValue('kelas', $siswa->kelas);
-        $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
-        $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+        $siswa = $this->Siswa_model->get_by_no_ujian_and_nis($no_ujian, $nis);
 
-        // Gunakan rich text untuk status lulus / tidak lulus
-        $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
-
-        if (strtolower($siswa->status) === 'lulus') {
-            $statusRichText->addText('LULUS', ['bold' => true]);
-            $statusRichText->addText(' / ', []);
-            $statusRichText->addText('TIDAK LULUS', ['strikethrough' => true, 'color' => '888888']);
+        if ($siswa) {
+            $data['siswa'] = $siswa;
+            $this->load->view('skl/result', $data);
         } else {
-            $statusRichText->addText('LULUS', ['strikethrough' => true, 'color' => '888888']);
-            $statusRichText->addText(' / ', []);
-            $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
-        }
-
-        // Set ke template
-        $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
-
-        $templateProcessor->saveAs($docxPath);
-
-        // Deteksi OS dan jalur LibreOffice
-        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-        $sofficePath = $isWindows
-            ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
-            : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
-
-        // Konversi Word ke PDF
-        $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
-        exec($cmd, $output, $returnCode);
-
-        // Cek apakah PDF berhasil dihasilkan
-        if ($returnCode === 0 && file_exists($pdfPath)) {
-            redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
-        } else {
-            $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF.');
+            $this->session->set_flashdata('error', 'Data tidak ditemukan! Periksa kembali No. Ujian dan NIS.');
             redirect('skl/search');
         }
-    } else {
-        $this->session->set_flashdata('error', 'Data siswa tidak ditemukan.');
-        redirect('skl/search');
     }
-}
+/*    public function result()
+    {
+        $nis = $this->input->post('nis');
+        $siswa = $this->Siswa_model->get_by_nis($nis);
+
+        if ($siswa) {
+            $data['siswa'] = $siswa;
+            $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
+        } else {
+            $this->session->set_flashdata('error', 'Data tidak ditemukan!');
+            redirect('skl/search');
+        }
+    }*/
+
+    public function download_skl($nis)
+    {
+        $siswa = $this->Siswa_model->get_by_nis($nis);
+        if ($siswa) {
+            // Path
+            $templatePath = FCPATH . 'template/skl_template.docx';
+            $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
+            $pdfPath  = FCPATH . 'temp/skl_' . $siswa->nis . '.pdf';
+
+            // Generate Word
+            $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
+            $templateProcessor->setValue('nis', $siswa->nis);
+            $templateProcessor->setValue('kelas', $siswa->kelas);
+            $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
+            $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+
+            // Gunakan rich text untuk status lulus / tidak lulus
+            $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
+
+            if (strtolower($siswa->status) === 'lulus') {
+                $statusRichText->addText('LULUS', ['bold' => true]);
+                $statusRichText->addText(' / ', []);
+                $statusRichText->addText('TIDAK LULUS', ['strikethrough' => true, 'color' => '888888']);
+            } else {
+                $statusRichText->addText('LULUS', ['strikethrough' => true, 'color' => '888888']);
+                $statusRichText->addText(' / ', []);
+                $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
+            }
+
+            // Set ke template
+            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+
+            $templateProcessor->saveAs($docxPath);
+
+            // Deteksi OS dan jalur LibreOffice
+            $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+            $sofficePath = $isWindows
+                ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
+                : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
+
+            // Konversi Word ke PDF
+            $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+            exec($cmd, $output, $returnCode);
+
+            // Cek apakah PDF berhasil dihasilkan
+            if ($returnCode === 0 && file_exists($pdfPath)) {
+                redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
+            } else {
+                $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF.');
+                redirect('skl/search');
+            }
+        } else {
+            $this->session->set_flashdata('error', 'Data siswa tidak ditemukan.');
+            redirect('skl/search');
+        }
+    }
 
 
     private function convertHtmlToPdf($htmlPath, $nis)

@@ -37,6 +37,14 @@ class Siswa_model extends CI_Model {
         public function count_all() {
         return $this->db->count_all('siswa');
     }
+    public function get_by_no_ujian_and_nis($no_ujian, $nis)
+    {
+        return $this->db->get_where('siswa', [
+            'no_ujian' => $no_ujian,
+            'nis'      => $nis
+        ])->row();
+    }
+
 
     public function count_by_status($status) {
         return $this->db->where('status', $status)->count_all_results('siswa');
