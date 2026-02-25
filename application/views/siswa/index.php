@@ -6,8 +6,9 @@
         <h3 class="fw-bold mb-3">Data Siswa</h3>
         <h6 class="op-7 mb-2">Daftar lengkap siswa dan status kelulusannya</h6>
       </div>
-      <div class="ms-md-auto py-2 py-md-0">
-        <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round me-2">Tambah Siswa</a>
+      <div class="ms-md-auto py-2 py-md-0 d-flex gap-2">
+        <button id="generatePdfBtn" onclick="generatePdfBatch()" class="btn btn-warning btn-round"><i class="fas fa-file-pdf"></i> Generate Pengumuman Batch</button>
+        <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round">Tambah Siswa</a>
         <a href="<?php echo base_url();?>/siswa/import" class="btn btn-success btn-round">Import</a>
       </div>
     </div>
@@ -142,4 +143,40 @@
         alert('Terjadi kesalahan saat mengambil data.');
       });
   }
+
+  // Polling Generate Status Server-Side
+  function checkProgress() {
+    $.getJSON('<?= base_url("siswa/check_pdf_progress") ?>', function(data) {
+        if (data.status === 'processing') {
+            $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating ('+data.progress+'/'+data.total+')');
+            setTimeout(checkProgress, 2000); // Polling every 2 secs
+        } else if (data.status === 'completed') {
+            $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman (Selesai ' + data.total + ')');
+        } else {
+            $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
+        }
+    });
+  }
+
+  // Trigger CLI Batch Generate
+  function generatePdfBatch() {
+     if(confirm('Apakah Anda yakin ingin melakukan generate PDF untuk semua siswa? Ini akan berjalan di background.')) {
+        $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memulai...');
+        
+        $.post('<?= base_url("siswa/trigger_pdf_batch") ?>', function(res) {
+            const data = JSON.parse(res);
+            if(data.status === 'success') {
+                checkProgress(); // Mulai polling
+            } else {
+                alert(data.message);
+                $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
+            }
+        });
+     }
+  }
+
+  // Check on load
+  $(document).ready(function() {
+      checkProgress();
+  });
 </script>
