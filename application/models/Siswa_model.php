@@ -53,6 +53,17 @@ class Siswa_model extends CI_Model {
         ])->row();
     }
 
+    public function get_by_token($token)
+    {
+        return $this->db->get_where('siswa', ['token_download' => $token])->row();
+    }
+
+    public function update_token($nis, $token)
+    {
+        $this->db->where('nis', $nis);
+        return $this->db->update('siswa', ['token_download' => $token]);
+    }
+
 
 
     public function count_by_status($status) {

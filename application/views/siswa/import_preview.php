@@ -8,6 +8,7 @@
                 <th>Tanggal Lahir</th>
                 <th>NIS</th>
                 <th>NISN</th>
+                <th>No HP (WA)</th>
                 <th>Kelas</th>
                 <th>Nama Orang Tua</th>
                 <th>Rata-rata</th>
@@ -22,6 +23,7 @@
                 <td><?= $row['tanggal_lahir'] ?></td>
                 <td><?= $row['nis'] ?></td>
                 <td><?= $row['nisn'] ?></td>
+                <td><?= $row['no_hp'] ?></td>
                 <td><?= $row['kelas'] ?></td>
                 <td><?= $row['nama_ortu'] ?></td>
                 <td><?= $row['rata_rata'] ?></td>

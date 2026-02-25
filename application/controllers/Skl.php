@@ -46,6 +46,54 @@ class Skl extends CI_Controller {
         $siswa = $this->Siswa_model->get_by_nis_and_no_ujian($nis, $no_ujian);
 
         if ($siswa) {
+            // --- LOGIKA WHATSAPP QUEUE WABLAS ---
+            
+            // 1. Pastikan Siswa punya Token Download yang unik untuk keamanan link WA
+            if (empty($siswa->token_download)) {
+                // Generate token acak 32 karakter rahasia
+                $token = bin2hex(random_bytes(16));
+                $this->Siswa_model->update_token($siswa->nis, $token);
+                $siswa->token_download = $token; // Update objek saat ini untuk dipakai di pesan
+            }
+
+            // 2. Cek apakah NIS ini sudah masuk antrian / pernah dikirim WA sebelumnya
+            $queue_check = $this->db->get_where('whatsapp_queue', ['nis' => $siswa->nis])->row();
+            
+            // Ambil pengaturan Wablas dari Database Utama
+            $pengaturan = $this->db->get('pengaturan')->row();
+
+            // Eksekusi trigger WA Queue hanya jika Fitur AKTIF
+            if ($pengaturan && $pengaturan->wablas_status == 1 && !$queue_check && !empty($siswa->no_hp)) {
+                // Link khusus WA
+                $link_download = base_url('skl/download_skl_wa/' . $siswa->token_download);
+                $is_lulus = (strtolower($siswa->status) == 'lulus');
+                
+                $pesan_raw = "";
+                if ($is_lulus) {
+                    $pesan_raw = !empty($pengaturan->wablas_template_lulus) ? $pengaturan->wablas_template_lulus : 
+                    "🚨 *PENGUMUMAN RESMI SEKOLAH* 🚨\n\nHalo Bapak/Ibu Wali Murid & Ananda *{NAMA_SISWA}*.\nBerdasarkan Rapat Pleno Dewan Guru, siswa dinyatakan: *LULUS* ✅.\nSilakan unduh SKL resmi pada tautan berikut: {LINK_DOWNLOAD}";
+                } else {
+                    $pesan_raw = !empty($pengaturan->wablas_template_gagal) ? $pengaturan->wablas_template_gagal : 
+                    "🚨 *PENGUMUMAN RESMI SEKOLAH* 🚨\n\nHalo Bapak/Ibu Wali Murid & Ananda *{NAMA_SISWA}*.\nBerdasarkan Rapat Pleno Dewan Guru, siswa dinyatakan: *TIDAK LULUS* ❌.\nTetap Semangat! Unduh Keterangan hasil ujian pada tautan berikut: {LINK_DOWNLOAD}";
+                }
+
+                // Parse Variabel Dinamis
+                $pesan = str_replace(
+                    ['{NAMA_SISWA}', '{NIS}', '{KELAS}', '{LINK_DOWNLOAD}'],
+                    [$siswa->nama_lengkap, $siswa->nis, $siswa->kelas, $link_download],
+                    $pesan_raw
+                );
+
+                // Insert ke antrian
+                $this->db->insert('whatsapp_queue', [
+                    'nis' => $siswa->nis,
+                    'no_hp' => $siswa->no_hp, // Pastikan field no_hp ada di DB siswa
+                    'pesan' => $pesan,
+                    'status' => 'pending'
+                ]);
+            }
+            // --- END LOGIKA WHATSAPP ---
+
             $data['siswa'] = $siswa;
             $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
         } else {
@@ -105,17 +153,32 @@ class Skl extends CI_Controller {
 
             // Deteksi OS dan jalur LibreOffice
             $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-            $sofficePath = $isWindows
-                ? '"C:\Program Files\LibreOffice\program\soffice.exe"'
-                : '/opt/libreoffice6.4/program/soffice'; // Path LibreOffice di Hosting
+            
+            if ($isWindows) {
+                $sofficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
+                $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+                exec($cmd, $output, $returnCode);
+            } else {
+                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                $loProfile = FCPATH . "temp/lo_profile_single_" . $siswa->nis . "_" . rand(100, 999);
+                
+                $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";
+                
+                $outputStr = shell_exec($cmd);
+                $returnCode = ($outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
 
-            // Konversi Word ke PDF
-            $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
-            exec($cmd, $output, $returnCode);
+                // Cleanup temporary background LibreOffice profile
+                if (is_dir($loProfile)) {
+                    shell_exec("rm -rf " . escapeshellarg($loProfile));
+                }
+            }
 
             // Cek apakah PDF berhasil dihasilkan
             if ($returnCode === 0 && file_exists($pdfPath)) {
-                redirect(base_url('temp/skl_' . $siswa->nis . '.pdf'));
+                $this->load->helper('download');
+                $data = file_get_contents($pdfPath);
+                $name = 'SKL_' . $siswa->nis . '.pdf';
+                force_download($name, $data);
             } else {
                 $this->session->set_flashdata('error', 'Gagal mengonversi SKL ke PDF.');
                 redirect('skl/search');
@@ -123,6 +186,80 @@ class Skl extends CI_Controller {
         } else {
             $this->session->set_flashdata('error', 'Data siswa tidak ditemukan.');
             redirect('skl/search');
+        }
+    }
+
+
+    // Endpoint Khusus Wablas/WhatsApp dengan URL Rahasia (Token)
+    public function download_skl_wa($token)
+    {
+        $siswa = $this->Siswa_model->get_by_token($token);
+        if ($siswa) {
+            // Path
+            $templatePath = FCPATH . 'template/skl_template.docx';
+            $docxPath = FCPATH . 'temp/skl_wa_' . $siswa->nis . '.docx';
+            $pdfPath  = FCPATH . 'temp/skl_wa_' . $siswa->nis . '.pdf';
+
+            // Generate Word
+            $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
+            $templateProcessor->setValue('nis', $siswa->nis);
+            $templateProcessor->setValue('kelas', $siswa->kelas);
+            $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
+            $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+
+            // Gunakan rich text untuk status lulus / tidak lulus
+            $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
+
+            if (strtolower($siswa->status) === 'lulus') {
+                $statusRichText->addText('LULUS', ['bold' => true]);
+                $statusRichText->addText(' / ', []);
+                $statusRichText->addText('TIDAK LULUS', ['strikethrough' => true, 'color' => '888888']);
+            } else {
+                $statusRichText->addText('LULUS', ['strikethrough' => true, 'color' => '888888']);
+                $statusRichText->addText(' / ', []);
+                $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
+            }
+
+            // Set ke template
+            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+
+            $templateProcessor->saveAs($docxPath);
+
+            // Deteksi OS dan jalur LibreOffice
+            $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+            
+            if ($isWindows) {
+                $sofficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
+                $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
+                exec($cmd, $output, $returnCode);
+            } else {
+                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                $loProfile = FCPATH . "temp/lo_profile_wa_" . $siswa->nis . "_" . rand(100, 999);
+                
+                $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";
+                
+                $outputStr = shell_exec($cmd);
+                $returnCode = ($outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
+
+                // Cleanup temporary background LibreOffice profile
+                if (is_dir($loProfile)) {
+                    shell_exec("rm -rf " . escapeshellarg($loProfile));
+                }
+            }
+
+            // Cek apakah PDF berhasil dihasilkan
+            if ($returnCode === 0 && file_exists($pdfPath)) {
+                $this->load->helper('download');
+                $data = file_get_contents($pdfPath);
+                $name = 'SKL_WA_' . $siswa->nis . '.pdf';
+                force_download($name, $data);
+            } else {
+                // Return string murni karena akses via WA tanpa sesi
+                echo "Maaf, dokumen PDF SKL gagal dibentuk oleh server. Harap lapor ke Panitia Sekolah.";
+            }
+        } else {
+            echo "Maaf, Tautan Dokumen Anda tidak valid atau telah kedaluwarsa.";
         }
     }
 
@@ -184,11 +321,35 @@ class Skl extends CI_Controller {
     public function upload_form()
     {
         if (!$this->session->userdata('user_id')) {
-        redirect('auth/login'); // Sesuaikan dengan URL login Anda
-        return;
-    }
+            redirect('auth/login'); // Sesuaikan dengan URL login Anda
+            return;
+        }
         $this->load->view('templates/header');
         $this->load->view('skl/upload');
+        $this->load->view('templates/footer');
+    }
+
+    // Menampilkan log dari background process
+    public function logs()
+    {
+        if (!$this->session->userdata('user_id')) {
+            redirect('auth/login');
+            return;
+        }
+
+        // Ambil file log hari ini
+        $log_file = FCPATH . "application/logs/batch/generate_" . date('Y_m_d') . ".log";
+        $log_content = "Belum ada log/aktivitas generate pada hari ini.";
+
+        if (file_exists($log_file)) {
+            $log_content = file_get_contents($log_file);
+        }
+
+        $data['log_content'] = $log_content;
+        $data['log_date'] = date('d-m-Y');
+
+        $this->load->view('templates/header');
+        $this->load->view('skl/logs', $data);
         $this->load->view('templates/footer');
     }
 }

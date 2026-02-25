@@ -53,6 +53,7 @@ class Siswa extends CI_Controller {
                 'tanggal_lahir'  => $this->input->post('tanggal_lahir'),
                 'nis'            => $this->input->post('nis'),
                 'nisn'           => $this->input->post('nisn'),
+                'no_hp'          => $this->input->post('no_hp'),
                 'no_ujian'       => $this->input->post('no_ujian'),
                 'kelas'          => $this->input->post('kelas'),
                 'nama_ortu'      => $this->input->post('nama_ortu'),
@@ -122,19 +123,21 @@ class Siswa extends CI_Controller {
                     'tanggal_lahir' => $row['C'],
                     'nis' => $row['D'],
                     'nisn' => $row['E'],
-                    'no_ujian' => $row['F'], // Tambahan: Nomor Ujian
-                    'kelas' => $row['G'],
-                    'nama_ortu' => $row['H'],
-                    'rata_rata' => $row['I'],
-                    'status' => $row['J'],
+                    'no_hp' => isset($row['F']) ? $row['F'] : null,
+                    'no_ujian' => isset($row['G']) ? $row['G'] : null,
+                    'kelas' => $row['H'],
+                    'nama_ortu' => $row['I'],
+                    'rata_rata' => $row['J'],
+                    'status' => $row['K'],
                     'nilai_mapel' => []
                 ];
 
-                // Mulai dari kolom K untuk mapel/nilai
-                $col = 'K';
+                // Mulai dari kolom L untuk mapel/nilai
+                $col = 'L';
                 while (isset($row[$col]) && $row[$col] !== null) {
                     $mapel = $row[$col];
-                    $col_nilai = ++$col;
+                    $col++;
+                    $col_nilai = $col;
                     $nilai = isset($row[$col_nilai]) ? $row[$col_nilai] : null;
 
                     if ($mapel && $nilai !== null) {
@@ -143,7 +146,7 @@ class Siswa extends CI_Controller {
                             'nilai' => $nilai
                         ];
                     }
-                    $col = ++$col; // Lanjut ke pasangan mapel/nilai berikutnya
+                    $col++;
                 }
 
                 $data['preview'][] = $siswa;
@@ -170,7 +173,8 @@ class Siswa extends CI_Controller {
                     'tanggal_lahir' => $row['tanggal_lahir'],
                     'nis'           => $row['nis'],
                     'nisn'          => $row['nisn'],
-                    'no_ujian'      => $row['no_ujian'], // Tambahan
+                    'no_hp'         => isset($row['no_hp']) ? $row['no_hp'] : null,
+                    'no_ujian'      => $row['no_ujian'],
                     'kelas'         => $row['kelas'],
                     'nama_ortu'     => $row['nama_ortu'],
                     'rata_rata'     => $row['rata_rata'],
@@ -221,20 +225,36 @@ class Siswa extends CI_Controller {
             return;
         }
 
-        // Jalankan script CLI di background (khusus server Linux / macOS)
-        // Di Windows, background command berbeda (menggunakan start /B)
-        // $cmd = "php " . FCPATH . "index.php generator generate_pengumuman_batch > /dev/null 2>&1 &";
-        
+        // Ambil parameter mode (skip/overwrite) dari POST
+        $mode = $this->input->post('mode') ? $this->input->post('mode') : 'skip';
+
+        // Segera kunci database menjadi "processing" dengan progress 0 agar UI tidak melihat status 'completed' yang lama
+        $this->Batch_model->update_status(['status' => 'processing', 'progress' => 0]);
+
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         if ($isWindows) {
-            $cmd = "start /B php " . escapeshellarg(FCPATH . "index.php") . " generator generate_pengumuman_batch";
+            $cmd = "start /B php " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode);
             pclose(popen($cmd, "r"));
         } else {
-            $cmd = "php " . escapeshellarg(FCPATH . "index.php") . " generator generate_pengumuman_batch > /dev/null 2>&1 &";
+            // Gunakan absolute path XAMPP PHP agar Apache selalu bisa menemukannya
+            $cmd = "/opt/lampp/bin/php " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode) . " > /dev/null 2>&1 &";
             exec($cmd);
         }
 
         echo json_encode(['status' => 'success', 'message' => 'Proses Batch Generate PDF telah dimulai di background.']);
+    }
+
+    public function stop_pdf_batch()
+    {
+        $this->load->model('Batch_model');
+        $status = $this->Batch_model->get_status();
+        
+        if ($status && $status->status == 'processing') {
+            $this->Batch_model->update_status(['status' => 'stopped']);
+            echo json_encode(['status' => 'success', 'message' => 'Perintah membatalkan proses berhasil dikirim ke background.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Tidak ada proses yang sedang berjalan.']);
+        }
     }
 
     public function check_pdf_progress()

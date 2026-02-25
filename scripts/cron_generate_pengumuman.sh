@@ -11,6 +11,6 @@ DIR="/opt/lampp/htdocs/pengumuman"
 cd $DIR
 
 # Jalankan CLI Controller dan simpan outputnya di log
-php index.php generator generate_pengumuman_batch >> temp/cron_generate.log 2>&1
+php index.php skl_generator generate_pengumuman_batch >> temp/cron_generate.log 2>&1
 
 echo "Cronjob dieksekusi pada $(date)" >> temp/cron_generate.log

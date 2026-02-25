@@ -139,4 +139,107 @@ class Setting extends CI_Controller {
         $this->Countdown_model->delete_target_time($id);
         redirect('setting');
     }
+
+    public function wablas()
+    {
+        $data['pengaturan'] = $this->Setting_model->get_first();
+
+        $this->form_validation->set_rules('wablas_domain', 'Domain Wablas', 'required');
+        $this->form_validation->set_rules('wablas_token', 'Token Wablas', 'required');
+        $this->form_validation->set_rules('wablas_status', 'Status Wablas', 'required|in_list[0,1]');
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('templates/header');
+            $this->load->view('setting/wablas', $data);
+            $this->load->view('templates/footer');
+        } else {
+            $data_update = [
+                'wablas_domain' => rtrim($this->input->post('wablas_domain'), '/'),
+                'wablas_token'  => $this->input->post('wablas_token'),
+                'wablas_status' => $this->input->post('wablas_status')
+            ];
+
+            // Update setting menggunakan ID 1
+            $this->Setting_model->update(1, $data_update);
+            $this->session->set_flashdata('success', 'Pengaturan API Wablas berhasil diperbarui.');
+            redirect('setting/wablas');
+        }
+    }
+
+    public function test_wablas()
+    {
+        $no_hp = $this->input->post('no_hp_test');
+        if (empty($no_hp)) {
+            $this->session->set_flashdata('error', 'Nomor HP tujuan tidak boleh kosong.');
+            redirect('setting/wablas');
+        }
+
+        $pengaturan = $this->Setting_model->get_first();
+        if (!$pengaturan || empty($pengaturan->wablas_domain) || empty($pengaturan->wablas_token)) {
+            $this->session->set_flashdata('error', 'Konfigurasi API Wablas belum lengkap. Harap simpan Domain dan Token terlebih dahulu.');
+            redirect('setting/wablas');
+        }
+
+        $domain = rtrim($pengaturan->wablas_domain, '/');
+        $token  = $pengaturan->wablas_token;
+        
+        // Bersihkan format nomor
+        $phone = preg_replace('/[^0-9]/', '', $no_hp);
+        if (substr($phone, 0, 1) == '0') {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        $pesan = "🤖 *TEST KONEKSI WABLAS API*\n\nHalo! Jika Anda menerima pesan ini, artinya integrasi API WhatsApp dari Dashboard Sistem Pengumuman Kelulusan Anda telah berfungsi dengan baik. ✅";
+
+        $curl = curl_init();
+        $data = [
+            'phone' => $phone,
+            'message' => $pesan,
+        ];
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, [
+            "Authorization: " . $token,
+            "Content-Type: application/json"
+        ]);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($curl, CURLOPT_URL, $domain . "/api/send-message");
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+
+        $result = curl_exec($curl);
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($curl);
+        curl_close($curl);
+
+        if ($http_code == 200 || $http_code == 201) {
+            $this->session->set_flashdata('success', 'Pesan Test berhasil dikirim ke ' . $phone . '. Response: ' . $result);
+        } else {
+            $error_msg = $result ? $result : "cURL Error: " . $curl_error;
+            $this->session->set_flashdata('error', 'Gagal mengirim pesan Test. (HTTP Code: ' . $http_code . '). Pesan: ' . $error_msg);
+        }
+
+        redirect('setting/wablas');
+    }
+
+    public function wablas_template()
+    {
+        $this->form_validation->set_rules('wablas_template_lulus', 'Template Lulus', 'required');
+        $this->form_validation->set_rules('wablas_template_gagal', 'Template Tidak Lulus', 'required');
+
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('error', 'Semua kolom template pesan wajib diisi.');
+        } else {
+            $data_update = [
+                'wablas_template_lulus' => $this->input->post('wablas_template_lulus'),
+                'wablas_template_gagal' => $this->input->post('wablas_template_gagal')
+            ];
+
+            $this->Setting_model->update(1, $data_update);
+            $this->session->set_flashdata('success_template', 'Template Pesan otomatis WhatsApp berhasil diperbarui.');
+        }
+        redirect('setting/wablas');
+    }
 }

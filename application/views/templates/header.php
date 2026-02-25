@@ -110,6 +110,16 @@
                         <span class="sub-item">Hitung Mundur</span>
                       </a>
                     </li>
+                    <li>
+                      <a href="<?= base_url('skl/logs') ?>">
+                        <span class="sub-item">Log Background</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="<?= base_url('setting/wablas') ?>">
+                        <span class="sub-item">Wablas API</span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
               </li>

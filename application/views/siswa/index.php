@@ -8,6 +8,7 @@
       </div>
       <div class="ms-md-auto py-2 py-md-0 d-flex gap-2">
         <button id="generatePdfBtn" onclick="generatePdfBatch()" class="btn btn-warning btn-round"><i class="fas fa-file-pdf"></i> Generate Pengumuman Batch</button>
+        <button id="stopPdfBtn" onclick="stopPdfBatch()" class="btn btn-danger btn-round" style="display: none;"><i class="fas fa-stop-circle"></i> Stop Generate</button>
         <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round">Tambah Siswa</a>
         <a href="<?php echo base_url();?>/siswa/import" class="btn btn-success btn-round">Import</a>
       </div>
@@ -23,6 +24,7 @@
                 <th>Nama Lengkap</th>
                 <th>NO Ujian</th>
                 <th>NIS</th>
+                <th>No HP (WA)</th>
                 <th>Kelas</th>
                 <th>Status</th>
                 <th>Dibuat Pada</th>
@@ -37,6 +39,7 @@
                     <td><?= $row->nama_lengkap ?></td>
                     <td><?= $row->no_ujian ?></td>
                     <td><?= $row->nis ?></td>
+                    <td><?= $row->no_hp ?></td>
                     <td><?= $row->kelas ?></td>
                     <td>
                       <span class="badge bg-<?= $row->status == 'Lulus' ? 'success' : 'danger' ?>">
@@ -94,11 +97,12 @@
   </div>
 </div>
 
-<!-- DataTables & Bootstrap Scripts -->
+<!-- DataTables, Bootstrap & SweetAlert2 Scripts -->
 <link rel="stylesheet" href="//cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="//cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   $(document).ready(function () {
@@ -149,30 +153,71 @@
     $.getJSON('<?= base_url("siswa/check_pdf_progress") ?>', function(data) {
         if (data.status === 'processing') {
             $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating ('+data.progress+'/'+data.total+')');
+            $('#stopPdfBtn').show();
             setTimeout(checkProgress, 2000); // Polling every 2 secs
         } else if (data.status === 'completed') {
             $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman (Selesai ' + data.total + ')');
+            $('#stopPdfBtn').hide();
+            $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
+        } else if (data.status === 'stopped') {
+            $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman (Dihentikan)');
+            $('#stopPdfBtn').hide();
+            $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
         } else {
             $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
+            $('#stopPdfBtn').hide();
+            $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
         }
     });
   }
 
   // Trigger CLI Batch Generate
   function generatePdfBatch() {
-     if(confirm('Apakah Anda yakin ingin melakukan generate PDF untuk semua siswa? Ini akan berjalan di background.')) {
-        $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memulai...');
-        
-        $.post('<?= base_url("siswa/trigger_pdf_batch") ?>', function(res) {
-            const data = JSON.parse(res);
-            if(data.status === 'success') {
-                checkProgress(); // Mulai polling
-            } else {
-                alert(data.message);
-                $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
-            }
-        });
-     }
+      Swal.fire({
+          title: 'Generate Pengumuman PDF',
+          text: "Pilih mode pemrosesan batch:",
+          icon: 'question',
+          showCancelButton: true,
+          showDenyButton: true,
+          confirmButtonColor: '#3085d6',
+          denyButtonColor: '#ffc107',
+          cancelButtonColor: '#d33',
+          confirmButtonText: '<i class="fas fa-forward"></i> Skip Data Lama (Cepat)',
+          denyButtonText: '<i class="fas fa-trash-alt"></i> Ulangi dari Awal (Hapus Hasil)',
+          cancelButtonText: 'Batal'
+      }).then((result) => {
+          if (result.isConfirmed || result.isDenied) {
+              const mode = result.isConfirmed ? 'skip' : 'overwrite';
+              $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memulai...');
+              $('#stopPdfBtn').show();
+              
+              $.post('<?= base_url("siswa/trigger_pdf_batch") ?>', { mode: mode }, function(res) {
+                  const data = JSON.parse(res);
+                  if(data.status === 'success') {
+                      checkProgress(); // Mulai polling
+                  } else {
+                      alert(data.message);
+                      $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
+                      $('#stopPdfBtn').hide();
+                  }
+              });
+          }
+      });
+  }
+
+  function stopPdfBatch() {
+      if(confirm('Apakah Anda yakin ingin menghentikan proses generate dokumen yang sedang berjalan?')) {
+          $('#stopPdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menghentikan...');
+          $.post('<?= base_url("siswa/stop_pdf_batch") ?>', function(res) {
+              const data = JSON.parse(res);
+              if(data.status === 'success') {
+                  // Berhasil kirim command, biarkan polling checkProgress yang update tulisan
+              } else {
+                  alert(data.message);
+                  $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
+              }
+          });
+      }
   }
 
   // Check on load

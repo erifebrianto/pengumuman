@@ -18,6 +18,9 @@
 
                     <label>NISN</label>
                     <input type="text" name="nisn" class="form-control" required>
+
+                    <label>No HP (WhatsApp)</label>
+                    <input type="text" name="no_hp" class="form-control" placeholder="Contoh: 0812xx" required>
                 </div>
                 <div class="col-md-6">
                     <label>No Ujian</label>

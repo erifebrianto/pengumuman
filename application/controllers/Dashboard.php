@@ -21,6 +21,9 @@ class Dashboard extends CI_Controller {
         $data['jumlah_tidak_lulus'] = $this->Siswa_model->count_by_status('tidak lulus');
         $data['kelulusan_per_kelas'] = $this->Siswa_model->get_kelulusan_per_kelas(); 
 
+        $data['pengaturan'] = $this->db->get('pengaturan')->row();
+        $data['wa_pending'] = $this->db->get_where('whatsapp_queue', ['status' => 'pending'])->num_rows();
+
         // Load view dashboard
         $this->load->view('templates/header', $data);
         $this->load->view('dashboard/index', $data); // ganti dari 'templates/content'

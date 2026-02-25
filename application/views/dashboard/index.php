@@ -66,7 +66,7 @@
       </div>
 
       <!-- Stats Cards -->
-      <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+      <div class="row row-cols-1 row-cols-md-4 g-4 mb-5">
         <!-- Total Siswa Card -->
         <div class="col">
           <div class="card card-gradient-primary text-white rounded-3 shadow-sm hover-scale">
@@ -75,12 +75,12 @@
                 <i class="bi bi-people-fill fs-3"></i>
               </div>
               <div>
-                <p class="fs-6">Total Siswa</p>
-                <h3 class="fw-bold"><?= $total_siswa ?></h3>
+                <p class="fs-6 mb-1">Total Siswa</p>
+                <h3 class="fw-bold m-0"><?= $total_siswa ?></h3>
               </div>
             </div>
             <div class="card-footer bg-transparent text-white-50">
-              <p class="small d-flex align-items-center">
+              <p class="small d-flex align-items-center m-0">
                 <span class="d-inline-block w-2 h-2 rounded-circle bg-blue-200 me-2"></span>
                 Seluruh siswa yang terdaftar
               </p>
@@ -96,14 +96,14 @@
                 <i class="bi bi-check-circle-fill fs-3"></i>
               </div>
               <div>
-                <p class="fs-6">Jumlah Lulus</p>
-                <h3 class="fw-bold"><?= $jumlah_lulus ?></h3>
+                <p class="fs-6 mb-1">Jumlah Lulus</p>
+                <h3 class="fw-bold m-0"><?= $jumlah_lulus ?></h3>
               </div>
             </div>
             <div class="card-footer bg-transparent text-white-50">
-              <p class="small d-flex align-items-center">
+              <p class="small d-flex align-items-center m-0">
                 <span class="d-inline-block w-2 h-2 rounded-circle bg-green-200 me-2"></span>
-                <?= round(($jumlah_lulus/$total_siswa)*100, 2) ?>% dari total siswa
+                <?= round(($jumlah_lulus/max($total_siswa, 1))*100, 2) ?>% dari total siswa
               </p>
             </div>
           </div>
@@ -117,18 +117,48 @@
                 <i class="bi bi-x-circle-fill fs-3"></i>
               </div>
               <div>
-                <p class="fs-6">Tidak Lulus</p>
-                <h3 class="fw-bold"><?= $jumlah_tidak_lulus ?></h3>
+                <p class="fs-6 mb-1">Tidak Lulus</p>
+                <h3 class="fw-bold m-0"><?= $jumlah_tidak_lulus ?></h3>
               </div>
             </div>
             <div class="card-footer bg-transparent text-white-50">
-              <p class="small d-flex align-items-center">
+              <p class="small d-flex align-items-center m-0">
                 <span class="d-inline-block w-2 h-2 rounded-circle bg-red-200 me-2"></span>
-                <?= round(($jumlah_tidak_lulus/$total_siswa)*100, 2) ?>% dari total siswa
+                <?= round(($jumlah_tidak_lulus/max($total_siswa, 1))*100, 2) ?>% dari total siswa
               </p>
             </div>
           </div>
         </div>
+
+        <!-- Wablas API Card -->
+        <div class="col">
+          <div class="card text-white rounded-3 shadow-sm hover-scale" style="background: linear-gradient(135deg, #475569 0%, #1e293b 100%);">
+            <a href="<?= base_url('setting/wablas') ?>" class="text-decoration-none text-white d-block w-100 h-100">
+              <div class="card-body d-flex">
+                <div class="glass-effect p-4 rounded-full mr-4">
+                  <i class="bi bi-whatsapp fs-3 text-success"></i>
+                </div>
+                <div>
+                  <p class="fs-6 mb-1">Wablas API 
+                    <?php if(isset($pengaturan) && $pengaturan->wablas_status == 1): ?>
+                      <span class="badge bg-success ms-1">AKTIF</span>
+                    <?php else: ?>
+                      <span class="badge bg-secondary ms-1">OFF</span>
+                    <?php endif; ?>
+                  </p>
+                  <h3 class="fw-bold m-0"><?= isset($wa_pending) ? $wa_pending : 0 ?></h3>
+                </div>
+              </div>
+              <div class="card-footer bg-transparent text-white-50">
+                <p class="small d-flex align-items-center justify-content-between m-0">
+                  <span>Pesan dlm Antrean</span>
+                  <i class="bi bi-arrow-right-circle"></i>
+                </p>
+              </div>
+            </a>
+          </div>
+        </div>
+
       </div>
 
       <!-- Charts Section -->
