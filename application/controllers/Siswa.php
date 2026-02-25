@@ -199,6 +199,7 @@ class Siswa extends CI_Controller {
         redirect('siswa');
     }
 
+    
     public function test_word()
     {
         $phpWord = new PhpWord();
@@ -210,5 +211,47 @@ class Siswa extends CI_Controller {
         echo "File HelloWorld.docx berhasil dibuat!";
     }
 
-    
+    public function trigger_pdf_batch()
+    {
+        $this->load->model('Batch_model');
+        $status = $this->Batch_model->get_status();
+
+        if ($status && $status->status == 'processing') {
+            echo json_encode(['status' => 'error', 'message' => 'Proses generate sedang berjalan!']);
+            return;
+        }
+
+        // Jalankan script CLI di background (khusus server Linux / macOS)
+        // Di Windows, background command berbeda (menggunakan start /B)
+        // $cmd = "php " . FCPATH . "index.php generator generate_pengumuman_batch > /dev/null 2>&1 &";
+        
+        $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+        if ($isWindows) {
+            $cmd = "start /B php " . escapeshellarg(FCPATH . "index.php") . " generator generate_pengumuman_batch";
+            pclose(popen($cmd, "r"));
+        } else {
+            $cmd = "php " . escapeshellarg(FCPATH . "index.php") . " generator generate_pengumuman_batch > /dev/null 2>&1 &";
+            exec($cmd);
+        }
+
+        echo json_encode(['status' => 'success', 'message' => 'Proses Batch Generate PDF telah dimulai di background.']);
+    }
+
+    public function check_pdf_progress()
+    {
+        $this->load->model('Batch_model');
+        $status = $this->Batch_model->get_status();
+        
+        if ($status) {
+            echo json_encode([
+                'status' => $status->status,
+                'progress' => $status->progress,
+                'total' => $status->total,
+                'updated_at' => $status->updated_at
+            ]);
+        } else {
+            echo json_encode(['status' => 'idle', 'progress' => 0, 'total' => 0]);
+        }
+    }
 }
+
