@@ -17,4 +17,8 @@ class Jurusan_model extends CI_Model {
         $query = $this->db->get();
         return $query->result();
     }
+
+    public function get_by_name($name) {
+        return $this->db->get_where('jurusan', ['jurusan' => $name])->row();
+    }
 }

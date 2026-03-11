@@ -250,13 +250,14 @@
                 <i class="fas fa-id-card me-2"></i> NIS: <?= $siswa->nis ?> &nbsp;|&nbsp; KELAS: <?= $siswa->kelas ?>
             </p>
 
+
             <?php if (strtolower($siswa->status) == 'lulus'): ?>
                 <p class="mb-3" style="font-size: 1.1rem; color: #334155;">Selamat! Anda telah dinyatakan memenuhi syarat.</p>
                 <div class="status-badge status-lulus">
                     <i class="fas fa-check-circle status-icon"></i> LULUS
                 </div>
                 
-                <a href="<?= base_url('skl/download_skl/' . $siswa->nis) ?>" class="btn-download" id="downloadBtn">
+                <a href="<?= base_url('skl/download_skl/' . $siswa->token_download) ?>" class="btn-download" id="downloadBtn">
                     <i class="fas fa-cloud-download-alt"></i> Unduh Surat Kelulusan (PDF)
                 </a>
             <?php else: ?>
@@ -265,7 +266,7 @@
                     <i class="fas fa-times-circle status-icon"></i> TIDAK LULUS
                 </div>
                 
-                <a href="<?= base_url('skl/download_skl/' . $siswa->nis) ?>" class="btn-download" style="background: linear-gradient(135deg, #475569 0%, #334155 100%); box-shadow: 0 10px 25px -5px rgba(51, 65, 85, 0.4);" id="downloadBtn">
+                <a href="<?= base_url('skl/download_skl/' . $siswa->token_download) ?>" class="btn-download" style="background: linear-gradient(135deg, #475569 0%, #334155 100%); box-shadow: 0 10px 25px -5px rgba(51, 65, 85, 0.4);" id="downloadBtn">
                     <i class="fas fa-file-pdf"></i> Unduh Keterangan (PDF)
                 </a>
             <?php endif; ?>

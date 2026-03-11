@@ -28,76 +28,95 @@ class Skl extends CI_Controller {
         $data['nama_sekolah'] = $pengaturan->nama_sekolah ?? 'Nama Sekolah';
         $data['logo_sekolah'] = $pengaturan->logo_sekolah ?? 'default_logo.png'; // fallback jika tidak ada
         $data['background'] = $pengaturan->background ?? '';
+        $data['verification_method'] = $pengaturan->verification_method ?? 'exam_number_nis';
 
         $this->load->view('skl/search', $data);
     }
 
     public function result()
     {
-        $nis = $this->input->post('nis');
-        $no_ujian = $this->input->post('no_ujian');
+        $this->load->model('Setting_model');
+        $pengaturan = $this->Setting_model->get_first();
+        $method = $pengaturan->verification_method ?? 'exam_number_nis';
 
-        // Validasi format no_ujian
-        if (!preg_match('/^\d{4}-\d{4}-\d{3}$/', $no_ujian)) {
-            $this->session->set_flashdata('error', 'Format No. Ujian tidak valid. Contoh: 2025-0309-002');
-            redirect('skl/search');
+        $fields = [];
+        $error_msg = 'Data tidak ditemukan! Pastikan data yang Anda masukkan benar.';
+
+        switch ($method) {
+            case 'nisn':
+                $nisn = $this->input->post('nisn');
+                if (empty($nisn)) redirect('skl/search');
+                $fields = ['nisn' => $nisn];
+                break;
+            case 'nisn_dob':
+                $nisn = $this->input->post('nisn');
+                $dob  = $this->input->post('tanggal_lahir');
+                if (empty($nisn) || empty($dob)) redirect('skl/search');
+                $fields = ['nisn' => $nisn, 'tanggal_lahir' => $dob];
+                break;
+            case 'exam_number':
+                $no_ujian = $this->input->post('no_ujian');
+                if (empty($no_ujian)) redirect('skl/search');
+                $fields = ['no_ujian' => $no_ujian];
+                break;
+            case 'exam_number_dob':
+                $no_ujian = $this->input->post('no_ujian');
+                $dob      = $this->input->post('tanggal_lahir');
+                if (empty($no_ujian) || empty($dob)) redirect('skl/search');
+                $fields = ['no_ujian' => $no_ujian, 'tanggal_lahir' => $dob];
+                break;
+            case 'exam_number_nis':
+            default:
+                $no_ujian = $this->input->post('no_ujian');
+                $nis      = $this->input->post('nis');
+                if (empty($no_ujian) || empty($nis)) redirect('skl/search');
+                $fields = ['no_ujian' => $no_ujian, 'nis' => $nis];
+                break;
         }
 
-        $siswa = $this->Siswa_model->get_by_nis_and_no_ujian($nis, $no_ujian);
+        $siswa = $this->Siswa_model->get_by_fields($fields);
 
         if ($siswa) {
-            // --- LOGIKA WHATSAPP QUEUE WABLAS ---
-            
-            // 1. Pastikan Siswa punya Token Download yang unik untuk keamanan link WA
+            // Ensure student has a secure download token
             if (empty($siswa->token_download)) {
-                // Generate token acak 32 karakter rahasia
                 $token = bin2hex(random_bytes(16));
                 $this->Siswa_model->update_token($siswa->nis, $token);
-                $siswa->token_download = $token; // Update objek saat ini untuk dipakai di pesan
+                $siswa->token_download = $token;
             }
 
-            // 2. Cek apakah NIS ini sudah masuk antrian / pernah dikirim WA sebelumnya
+            // --- LOGIKA WHATSAPP QUEUE WABLAS ---
+            // Cek apakah NIS ini sudah masuk antrian / pernah dikirim WA sebelumnya
             $queue_check = $this->db->get_where('whatsapp_queue', ['nis' => $siswa->nis])->row();
-            
-            // Ambil pengaturan Wablas dari Database Utama
-            $pengaturan = $this->db->get('pengaturan')->row();
 
             // Eksekusi trigger WA Queue hanya jika Fitur AKTIF
             if ($pengaturan && $pengaturan->wablas_status == 1 && !$queue_check && !empty($siswa->no_hp)) {
-                // Link khusus WA
                 $link_download = base_url('skl/download_skl_wa/' . $siswa->token_download);
                 $is_lulus = (strtolower($siswa->status) == 'lulus');
                 
-                $pesan_raw = "";
-                if ($is_lulus) {
-                    $pesan_raw = !empty($pengaturan->wablas_template_lulus) ? $pengaturan->wablas_template_lulus : 
-                    "🚨 *PENGUMUMAN RESMI SEKOLAH* 🚨\n\nHalo Bapak/Ibu Wali Murid & Ananda *{NAMA_SISWA}*.\nBerdasarkan Rapat Pleno Dewan Guru, siswa dinyatakan: *LULUS* ✅.\nSilakan unduh SKL resmi pada tautan berikut: {LINK_DOWNLOAD}";
-                } else {
-                    $pesan_raw = !empty($pengaturan->wablas_template_gagal) ? $pengaturan->wablas_template_gagal : 
-                    "🚨 *PENGUMUMAN RESMI SEKOLAH* 🚨\n\nHalo Bapak/Ibu Wali Murid & Ananda *{NAMA_SISWA}*.\nBerdasarkan Rapat Pleno Dewan Guru, siswa dinyatakan: *TIDAK LULUS* ❌.\nTetap Semangat! Unduh Keterangan hasil ujian pada tautan berikut: {LINK_DOWNLOAD}";
-                }
+                $pesan_raw = $is_lulus ? 
+                    (!empty($pengaturan->wablas_template_lulus) ? $pengaturan->wablas_template_lulus : "LULUS") : 
+                    (!empty($pengaturan->wablas_template_gagal) ? $pengaturan->wablas_template_gagal : "TIDAK LULUS");
 
-                // Parse Variabel Dinamis
                 $pesan = str_replace(
                     ['{NAMA_SISWA}', '{NIS}', '{KELAS}', '{LINK_DOWNLOAD}'],
                     [$siswa->nama_lengkap, $siswa->nis, $siswa->kelas, $link_download],
                     $pesan_raw
                 );
 
-                // Insert ke antrian
                 $this->db->insert('whatsapp_queue', [
                     'nis' => $siswa->nis,
-                    'no_hp' => $siswa->no_hp, // Pastikan field no_hp ada di DB siswa
+                    'no_hp' => $siswa->no_hp,
                     'pesan' => $pesan,
-                    'status' => 'pending'
+                    'status' => 'pending',
+                    'created_at' => date('Y-m-d H:i:s')
                 ]);
             }
-            // --- END LOGIKA WHATSAPP ---
 
+            $data['pengaturan'] = $pengaturan;
             $data['siswa'] = $siswa;
-            $this->load->view('skl/result', $data);  // tampilkan hasil & tombol download
+            $this->load->view('skl/result', $data);
         } else {
-            $this->session->set_flashdata('error', 'Data tidak ditemukan!');
+            $this->session->set_flashdata('error', $error_msg);
             redirect('skl/search');
         }
     }
@@ -116,9 +135,9 @@ class Skl extends CI_Controller {
         }
     }*/
 
-    public function download_skl($nis)
+    public function download_skl($token)
     {
-        $siswa = $this->Siswa_model->get_by_nis($nis);
+        $siswa = $this->Siswa_model->get_by_token($token);
         if ($siswa) {
             // Path
             $templatePath = FCPATH . 'template/skl_template.docx';

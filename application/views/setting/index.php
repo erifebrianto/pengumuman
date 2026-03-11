@@ -78,6 +78,35 @@
               </div>
             </div>
 
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group mb-3">
+                    <label>Metode Verifikasi Login Siswa <span class="text-danger">*</span></label>
+                    <select name="verification_method" class="form-control" required>
+                        <option value="nisn" <?= $pengaturan->verification_method == 'nisn' ? 'selected' : ''; ?>>Metode 1: NISN Saja</option>
+                        <option value="exam_number_nis" <?= $pengaturan->verification_method == 'exam_number_nis' ? 'selected' : ''; ?>>Metode 2: Nomor Ujian + NIS</option>
+                        <option value="exam_number_dob" <?= $pengaturan->verification_method == 'exam_number_dob' ? 'selected' : ''; ?>>Metode 3: Nomor Ujian + Tanggal Lahir</option>
+                        <option value="nisn_dob" <?= $pengaturan->verification_method == 'nisn_dob' ? 'selected' : ''; ?>>Metode 4: NISN + Tanggal Lahir</option>
+                        <option value="exam_number" <?= $pengaturan->verification_method == 'exam_number' ? 'selected' : ''; ?>>Metode 5: Nomor Ujian Saja</option>
+                    </select>
+                    <small class="form-text text-muted">Tentukan kolom apa saja yang harus diisi siswa untuk mengecek kelulusan.</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group mb-3">
+                    <label>Mode Tampilan Hasil <span class="text-danger">*</span></label>
+                    <select name="mode_pengumuman" class="form-control" required>
+                        <option value="nilai" <?= $pengaturan->mode_pengumuman == 'nilai' ? 'selected' : ''; ?>>Mode 1: Tampilkan Nilai</option>
+                        <option value="status" <?= $pengaturan->mode_pengumuman == 'status' ? 'selected' : ''; ?>>Mode 2: Hanya Status Kelulusan</option>
+                    </select>
+                    <small class="form-text text-muted">Pilih apakah ingin menampilkan tabel nilai siswa atau hanya status lulus/tidak saja.</small>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

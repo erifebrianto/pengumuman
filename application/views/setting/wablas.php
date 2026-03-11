@@ -71,6 +71,34 @@
                 <small class="form-text text-muted d-block mt-1">Jika dinonaktifkan, siswa tidak akan mendapatkan WA saat mengecek kelulusan.</small>
               </div>
 
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label>Limit Pesan per Batch (CLI/Cron)</label>
+                    <input type="number" class="form-control" name="wa_batch_limit" value="<?= $pengaturan->wa_batch_limit ?>" required>
+                    <small class="form-text text-muted">Jumlah maksimal pesan yang dikirim dalam satu kali eksekusi cron.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Jeda Min (Detik)</label>
+                    <input type="number" class="form-control" name="wa_delay_min" value="<?= $pengaturan->wa_delay_min ?>" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Jeda Max (Detik)</label>
+                    <input type="number" class="form-control" name="wa_delay_max" value="<?= $pengaturan->wa_delay_max ?>" required>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                   <small class="form-text text-muted px-2">Jeda acak antar pesan untuk menghindari pemblokiran (spam filter).</small>
+                </div>
+              </div>
+
               <div class="form-group mt-3">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Konfigurasi</button>
               </div>
@@ -105,6 +133,42 @@
                 <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> Kirim Pesan Test</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Queue Status -->
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <div class="card border-primary">
+          <div class="card-header bg-primary text-white">
+            <h4 class="card-title text-white"><i class="fas fa-tasks"></i> Status Antrian WhatsApp</h4>
+          </div>
+          <div class="card-body">
+            <div class="row text-center px-4">
+              <div class="col-md-4 mb-3 mb-md-0">
+                <div class="p-3 border rounded bg-light">
+                  <h2 class="fw-bold text-warning mb-1"><?= $queue_count['pending'] ?></h2>
+                  <span class="text-muted fw-bold">PENDING</span>
+                  <div class="mt-2"><small>Menunggu di kirim oleh cronjob</small></div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3 mb-md-0">
+                <div class="p-3 border rounded bg-light">
+                  <h2 class="fw-bold text-success mb-1"><?= $queue_count['sent'] ?></h2>
+                  <span class="text-muted fw-bold">TERKIRIM</span>
+                  <div class="mt-2"><small>Pesan berhasil diterima API</small></div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 border rounded bg-light">
+                  <h2 class="fw-bold text-danger mb-1"><?= $queue_count['failed'] ?></h2>
+                  <span class="text-muted fw-bold">GAGAL</span>
+                  <div class="mt-2"><small>Gagal setelah 3x percobaan</small></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -113,43 +113,54 @@ class Siswa extends CI_Controller {
             $sheet = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
 
             $data['preview'] = [];
+            $headers = [];
 
             foreach ($sheet as $i => $row) {
-                if ($i == 1) continue; // Skip header
-
-                $siswa = [
-                    'nama_lengkap' => $row['A'],
-                    'tempat_lahir' => $row['B'],
-                    'tanggal_lahir' => $row['C'],
-                    'nis' => $row['D'],
-                    'nisn' => $row['E'],
-                    'no_hp' => isset($row['F']) ? $row['F'] : null,
-                    'no_ujian' => isset($row['G']) ? $row['G'] : null,
-                    'kelas' => $row['H'],
-                    'nama_ortu' => $row['I'],
-                    'rata_rata' => $row['J'],
-                    'status' => $row['K'],
-                    'nilai_mapel' => []
-                ];
-
-                // Mulai dari kolom L untuk mapel/nilai
-                $col = 'L';
-                while (isset($row[$col]) && $row[$col] !== null) {
-                    $mapel = $row[$col];
-                    $col++;
-                    $col_nilai = $col;
-                    $nilai = isset($row[$col_nilai]) ? $row[$col_nilai] : null;
-
-                    if ($mapel && $nilai !== null) {
-                        $siswa['nilai_mapel'][] = [
-                            'mapel' => $mapel,
-                            'nilai' => $nilai
-                        ];
-                    }
-                    $col++;
+                if ($i == 1) {
+                    $headers = $row;
+                    continue; // Skip header row for data processing
                 }
 
-                $data['preview'][] = $siswa;
+                // Map row data using headers
+                $mapped_row = [];
+                foreach ($headers as $col_letter => $header_name) {
+                    if ($header_name) {
+                        $mapped_row[trim($header_name)] = isset($row[$col_letter]) ? $row[$col_letter] : null;
+                    }
+                }
+
+                // Identify basic info (flexible names)
+                $siswa = [
+                    'nama_lengkap'  => $mapped_row['Nama'] ?? $mapped_row['Nama Lengkap'] ?? null,
+                    'tempat_lahir'  => $mapped_row['Tempat Lahir'] ?? null,
+                    'tanggal_lahir' => $mapped_row['Tanggal Lahir'] ?? null,
+                    'nis'           => $mapped_row['NIS'] ?? null,
+                    'nisn'          => $mapped_row['NISN'] ?? null,
+                    'no_hp'         => $mapped_row['No HP'] ?? $mapped_row['Nomor HP'] ?? null,
+                    'no_ujian'      => $mapped_row['No Ujian'] ?? $mapped_row['Nomor Ujian'] ?? null,
+                    'kelas'         => $mapped_row['Kelas'] ?? null,
+                    'jurusan'       => $mapped_row['Jurusan'] ?? null,
+                    'nama_ortu'     => $mapped_row['Nama Ortu'] ?? $mapped_row['Wali'] ?? null,
+                    'rata_rata'     => $mapped_row['Rata-rata'] ?? $mapped_row['Rata Rata'] ?? null,
+                    'status'        => $mapped_row['Status'] ?? $mapped_row['Keterangan'] ?? null,
+                    'nilai_mapel'   => []
+                ];
+
+                // Anything else is considered Mapel
+                $not_mapel = ['Nama', 'Nama Lengkap', 'Tempat Lahir', 'Tanggal Lahir', 'NIS', 'NISN', 'No HP', 'Nomor HP', 'No Ujian', 'Nomor Ujian', 'Kelas', 'Jurusan', 'Nama Ortu', 'Wali', 'Rata-rata', 'Rata Rata', 'Status', 'Keterangan'];
+                
+                foreach ($mapped_row as $key => $value) {
+                    if (!in_array($key, $not_mapel) && !empty($key)) {
+                        $siswa['nilai_mapel'][] = [
+                            'mapel' => $key,
+                            'nilai' => $value
+                        ];
+                    }
+                }
+
+                if (!empty($siswa['nisn']) || !empty($siswa['nama_lengkap'])) {
+                    $data['preview'][] = $siswa;
+                }
             }
 
             $this->session->set_userdata('preview_data', $data['preview']);
@@ -161,19 +172,24 @@ class Siswa extends CI_Controller {
 
     public function do_import()
     {
-        $this->load->model('Mapel_model');
-
         $preview = $this->session->userdata('preview_data');
         if ($preview) {
             foreach ($preview as $row) {
+                // Resolve Jurusan
+                $jurusan = null;
+                if (!empty($row['jurusan'])) {
+                    $jurusan = $this->Jurusan_model->get_by_name($row['jurusan']);
+                }
+
                 $siswa_data = [
                     'user_id'       => $this->session->userdata('user_id'),
+                    'jurusan_id'    => $jurusan ? $jurusan->id : null,
                     'nama_lengkap'  => $row['nama_lengkap'],
                     'tempat_lahir'  => $row['tempat_lahir'],
                     'tanggal_lahir' => $row['tanggal_lahir'],
                     'nis'           => $row['nis'],
                     'nisn'          => $row['nisn'],
-                    'no_hp'         => isset($row['no_hp']) ? $row['no_hp'] : null,
+                    'no_hp'         => $row['no_hp'],
                     'no_ujian'      => $row['no_ujian'],
                     'kelas'         => $row['kelas'],
                     'nama_ortu'     => $row['nama_ortu'],
@@ -182,16 +198,31 @@ class Siswa extends CI_Controller {
                     'created_at'    => date('Y-m-d H:i:s')
                 ];
 
-                $this->Siswa_model->create($siswa_data);
-                $siswa_id = $this->db->insert_id();
+                // Cek if exists by NISN or NIS
+                $existing = $this->Siswa_model->get_by_nis($row['nis']);
+                if (!$existing && !empty($row['nisn'])) {
+                    $existing = $this->db->get_where('siswa', ['nisn' => $row['nisn']])->row();
+                }
 
-                if (isset($row['nilai_mapel']) && is_array($row['nilai_mapel'])) {
+                if ($existing) {
+                    $this->Siswa_model->update($existing->id, $siswa_data);
+                    $siswa_id = $existing->id;
+                    // Delete old scores
+                    $this->db->delete('nilai_siswa', ['siswa_id' => $siswa_id]);
+                } else {
+                    $siswa_id = $this->Siswa_model->insert($siswa_data);
+                }
+
+                // Import Nilai
+                if ($jurusan && isset($row['nilai_mapel']) && is_array($row['nilai_mapel'])) {
                     foreach ($row['nilai_mapel'] as $pair) {
-                        $mapel = $this->Mapel_model->get_by_name($pair['mapel']);
+                        if ($pair['nilai'] === null || $pair['nilai'] === '') continue;
+
+                        $mapel = $this->Mata_pelajaran_model->get_by_name_and_jurusan($pair['mapel'], $jurusan->id);
                         if ($mapel) {
                             $this->Nilai_model->create([
                                 'siswa_id' => $siswa_id,
-                                'mapel_id' => $mapel['id'],
+                                'mapel_id' => $mapel->id,
                                 'nilai'    => $pair['nilai']
                             ]);
                         }

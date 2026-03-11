@@ -53,6 +53,11 @@ class Siswa_model extends CI_Model {
         ])->row();
     }
 
+    public function get_by_fields($fields)
+    {
+        return $this->db->get_where('siswa', $fields)->row();
+    }
+
     public function get_by_token($token)
     {
         return $this->db->get_where('siswa', ['token_download' => $token])->row();

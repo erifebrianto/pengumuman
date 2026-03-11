@@ -35,6 +35,8 @@ class Setting extends CI_Controller {
                 'no_tlp'              => $this->input->post('no_tlp'),
                 'website'             => $this->input->post('website'),
                 'nama_kepala_sekolah' => $this->input->post('nama_kepala_sekolah'),
+                'mode_pengumuman'     => $this->input->post('mode_pengumuman'),
+                'verification_method' => $this->input->post('verification_method'),
             ];
 
         // Upload logo sekolah
@@ -144,9 +146,11 @@ class Setting extends CI_Controller {
     {
         $data['pengaturan'] = $this->Setting_model->get_first();
 
-        $this->form_validation->set_rules('wablas_domain', 'Domain Wablas', 'required');
-        $this->form_validation->set_rules('wablas_token', 'Token Wablas', 'required');
-        $this->form_validation->set_rules('wablas_status', 'Status Wablas', 'required|in_list[0,1]');
+        $data['queue_count'] = [
+            'pending' => $this->db->where('status', 'pending')->count_all_results('whatsapp_queue'),
+            'sent'    => $this->db->where('status', 'sent')->count_all_results('whatsapp_queue'),
+            'failed'  => $this->db->where('status', 'failed')->count_all_results('whatsapp_queue'),
+        ];
 
         if ($this->form_validation->run() == FALSE) {
             $this->load->view('templates/header');
@@ -154,9 +158,12 @@ class Setting extends CI_Controller {
             $this->load->view('templates/footer');
         } else {
             $data_update = [
-                'wablas_domain' => rtrim($this->input->post('wablas_domain'), '/'),
-                'wablas_token'  => $this->input->post('wablas_token'),
-                'wablas_status' => $this->input->post('wablas_status')
+                'wablas_domain'  => rtrim($this->input->post('wablas_domain'), '/'),
+                'wablas_token'   => $this->input->post('wablas_token'),
+                'wablas_status'  => $this->input->post('wablas_status'),
+                'wa_batch_limit' => $this->input->post('wa_batch_limit'),
+                'wa_delay_min'   => $this->input->post('wa_delay_min'),
+                'wa_delay_max'   => $this->input->post('wa_delay_max'),
             ];
 
             // Update setting menggunakan ID 1
@@ -191,34 +198,13 @@ class Setting extends CI_Controller {
 
         $pesan = "🤖 *TEST KONEKSI WABLAS API*\n\nHalo! Jika Anda menerima pesan ini, artinya integrasi API WhatsApp dari Dashboard Sistem Pengumuman Kelulusan Anda telah berfungsi dengan baik. ✅";
 
-        $curl = curl_init();
-        $data = [
-            'phone' => $phone,
-            'message' => $pesan,
-        ];
+        $this->load->library('whatsapp');
+        $send_result = $this->whatsapp->send($no_hp, $pesan);
 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, [
-            "Authorization: " . $token,
-            "Content-Type: application/json"
-        ]);
-        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($curl, CURLOPT_URL, $domain . "/api/send-message");
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-
-        $result = curl_exec($curl);
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $curl_error = curl_error($curl);
-        curl_close($curl);
-
-        if ($http_code == 200 || $http_code == 201) {
-            $this->session->set_flashdata('success', 'Pesan Test berhasil dikirim ke ' . $phone . '. Response: ' . $result);
+        if ($send_result['status'] == 'sent') {
+            $this->session->set_flashdata('success', 'Pesan Test berhasil dikirim ke ' . $no_hp . '. Response: ' . $send_result['response']);
         } else {
-            $error_msg = $result ? $result : "cURL Error: " . $curl_error;
-            $this->session->set_flashdata('error', 'Gagal mengirim pesan Test. (HTTP Code: ' . $http_code . '). Pesan: ' . $error_msg);
+            $this->session->set_flashdata('error', 'Gagal mengirim pesan Test. Pesan: ' . ($send_result['error'] ?? 'Unknown Error'));
         }
 
         redirect('setting/wablas');

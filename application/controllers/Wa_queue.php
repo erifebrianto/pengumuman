@@ -28,10 +28,13 @@ class Wa_queue extends CI_Controller {
         $domain_wablas = rtrim($pengaturan->wablas_domain, '/'); // Cegah double slash
         $token_wablas  = $pengaturan->wablas_token; 
 
-        // 1. Ambil 20 antrian pesan yang berstatus 'pending'
-        // Limit 20 mencegah hit API massal yang berpotensi dianggap spam / memory limit
+        $batch_limit = (!empty($pengaturan->wa_batch_limit)) ? $pengaturan->wa_batch_limit : 10;
+        $delay_min   = (isset($pengaturan->wa_delay_min)) ? $pengaturan->wa_delay_min : 3;
+        $delay_max   = (isset($pengaturan->wa_delay_max)) ? $pengaturan->wa_delay_max : 6;
+
+        // 1. Ambil antrian pesan yang berstatus 'pending'
         $this->db->where('status', 'pending');
-        $this->db->limit(20);
+        $this->db->limit($batch_limit);
         $this->db->order_by('id', 'ASC');
         $queue = $this->db->get('whatsapp_queue')->result();
 
@@ -40,57 +43,43 @@ class Wa_queue extends CI_Controller {
             return;
         }
 
-        echo "[" . date('Y-m-d H:i:s') . "] Memproses " . count($queue) . " pesan WhatsApp...\n";
+        echo "[" . date('Y-m-d H:i:s') . "] Memproses " . count($queue) . " pesan WhatsApp (Limit: {$batch_limit})...\n";
+
+        $this->load->library('whatsapp');
 
         foreach ($queue as $q) {
-            // Nomor tujuan Wablas tidak boleh berawalan 0 atau menggunakan karakter +, hapus jika ada.
-            $phone = preg_replace('/[^0-9]/', '', $q->no_hp);
-            if (substr($phone, 0, 1) == '0') {
-                $phone = '62' . substr($phone, 1);
-            }
-
-            // Siapkan payload ke Wablas
-            $curl = curl_init();
-            $data = [
-                'phone' => $phone,
-                'message' => $q->pesan,
-            ];
-
-            curl_setopt($curl, CURLOPT_HTTPHEADER, [
-                "Authorization: " . $token_wablas,
-                "Content-Type: application/json"
-            ]);
-            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data));
-            curl_setopt($curl, CURLOPT_URL, $domain_wablas."/api/send-message");
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-
-            $result = curl_exec($curl);
-            $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            $curl_error = curl_error($curl);
-            curl_close($curl);
+            $send_result = $this->whatsapp->send($q->no_hp, $q->pesan);
 
             // Analisa hasil
-            $status_update = 'failed';
-            if ($http_code == 200 || $http_code == 201) {
-                $status_update = 'sent';
+            if ($send_result['status'] == 'sent') {
+                $this->db->where('id', $q->id);
+                $this->db->update('whatsapp_queue', [
+                    'status' => 'sent',
+                    'api_response' => $send_result['response'],
+                    'sent_at' => date('Y-m-d H:i:s')
+                ]);
+                $status_log = 'sent';
+            } else {
+                $new_retry_count = $q->retry_count + 1;
+                $status_update = ($new_retry_count >= 3) ? 'failed' : 'pending';
+                
+                $this->db->where('id', $q->id);
+                $this->db->update('whatsapp_queue', [
+                    'status' => $status_update,
+                    'retry_count' => $new_retry_count,
+                    'api_response' => $send_result['error'] ?? 'Unknown Error',
+                    'sent_at' => ($status_update == 'failed') ? date('Y-m-d H:i:s') : null
+                ]);
+                $status_log = $status_update . " (Retry: {$new_retry_count})";
             }
 
-            // 2. Update status queue di database beserta balasan API Wablas
-            $this->db->where('id', $q->id);
-            $this->db->update('whatsapp_queue', [
-                'status' => $status_update,
-                'api_response' => $result ? $result : "cURL Error: " . $curl_error,
-                'sent_at' => date('Y-m-d H:i:s')
-            ]);
+            echo "-> Mengirim ke {$q->no_hp} (ID: {$q->id}) - Status: {$status_log}\n";
 
-            echo "-> Mengirim ke {$phone} (ID: {$q->id}) - Status: {$status_update}\n";
-
-            // 3. Strategi Jeda Anti Spesialis Spam (Sleep dinamis antar pesan 3-6 detik)
-            $jeda = rand(3, 6);
-            sleep($jeda);
+            // 3. Strategi Jeda Anti Spam (Sleep dinamis sesuai setting)
+            $jeda = rand($delay_min, $delay_max);
+            if (count($queue) > 1) {
+                sleep($jeda);
+            }
         }
 
         echo "[" . date('Y-m-d H:i:s') . "] Eksekusi Batch Selesai.\n";

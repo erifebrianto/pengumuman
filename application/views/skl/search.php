@@ -84,6 +84,8 @@
 
     <!-- Form Pencarian -->
     <form method="post" action="<?= base_url('skl/result') ?>" class="space-y-4 <?= (time() < $target_timestamp) ? 'hidden' : '' ?>" id="form-box">
+        
+        <?php if (in_array($verification_method, ['exam_number', 'exam_number_nis', 'exam_number_dob'])): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-123 text-gray-400"></i>
@@ -92,14 +94,32 @@
               type="text" 
               name="no_ujian" 
               class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
-              placeholder="Masukkan No. Ujian (contoh: 2025-0309-002)" 
+              placeholder="Masukkan Nomor Ujian" 
               required
-              pattern="\d{4}-\d{4}-\d{3}"
-              title="Format: 2025-0309-002"
+              title="Masukkan Nomor Ujian Anda"
             />
-
         </div>
+        <?php endif; ?>
 
+        <?php if (in_array($verification_method, ['nisn', 'nisn_dob'])): ?>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="bi bi-person-vcard text-gray-400"></i>
+            </div>
+            <input 
+              type="text" 
+              name="nisn" 
+              class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+              placeholder="Masukkan NISN" 
+              required
+              pattern="[0-9]*"
+              inputmode="numeric"
+              title="Masukkan 10 digit NISN Anda"
+            />
+        </div>
+        <?php endif; ?>
+
+        <?php if ($verification_method == 'exam_number_nis'): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-person text-gray-400"></i>
@@ -112,9 +132,26 @@
                 required
                 pattern="[0-9]*"
                 inputmode="numeric"
-                title="Masukkan hanya angka NIS"
+                title="Masukkan NIS Anda"
             >
         </div>
+        <?php endif; ?>
+
+        <?php if (in_array($verification_method, ['exam_number_dob', 'nisn_dob'])): ?>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <i class="bi bi-calendar-event text-gray-400"></i>
+            </div>
+            <input 
+                type="date" 
+                name="tanggal_lahir" 
+                class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                required
+                title="Pilih Tanggal Lahir Anda"
+            >
+        </div>
+        <?php endif; ?>
+
         <button 
             type="submit" 
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"

@@ -33,12 +33,23 @@ class Mata_pelajaran_model extends CI_Model {
         return $this->db->get_where('mata_pelajaran', ['jurusan_id' => $jurusan_id])->result_array();
     }    
     public function get_mapel_by_jurusan($jurusan_id) {
-        $this->db->select('id, nama_mata_pelajaran');
+        $this->db->select('id, nama_mata_pelajaran, kode_mapel');
         $this->db->from('mata_pelajaran');
         $this->db->where('jurusan_id', $jurusan_id);
         $query = $this->db->get();
         return $query->result();
     }
+
+    public function get_by_name_and_jurusan($name, $jurusan_id) {
+        return $this->db->group_start()
+            ->where('nama_mata_pelajaran', $name)
+            ->or_where('kode_mapel', $name)
+            ->group_end()
+            ->where('jurusan_id', $jurusan_id)
+            ->get('mata_pelajaran')
+            ->row();
+    }
+
     public function create_batch($nilai_data) {
         $this->db->insert_batch('nilai_siswa', $nilai_data);
     }
