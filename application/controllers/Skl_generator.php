@@ -243,7 +243,15 @@ class Skl_generator extends CI_Controller {
 
             $outputStr = implode(" ", $output);
             if ($returnCode === 127 || strpos($outputStr, 'not found') !== false) {
-                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                    $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                } elseif (file_exists('/usr/bin/libreoffice')) {
+                    $sofficeOptPath = '/usr/bin/libreoffice';
+                } elseif (file_exists('/usr/bin/soffice')) {
+                    $sofficeOptPath = '/usr/bin/soffice';
+                } else {
+                    $sofficeOptPath = 'libreoffice';
+                }
                 $loProfile = $cli_temp_dir . "lo_profile_" . $siswa->nis . "_" . rand(100, 999);
                 $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg($upload_dir) . " 2>&1";
                 

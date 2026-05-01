@@ -11,6 +11,39 @@
         <button id="stopPdfBtn" onclick="stopPdfBatch()" class="btn btn-danger btn-round" style="display: none;"><i class="fas fa-stop-circle"></i> Stop Generate</button>
         <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round">Tambah Siswa</a>
         <a href="<?php echo base_url();?>/siswa/import" class="btn btn-success btn-round">Import</a>
+        <a href="<?php echo base_url('skl/logs');?>" class="btn btn-secondary btn-round" target="_blank"><i class="fas fa-file-alt"></i> Lihat Log Proses</a>
+      </div>
+    </div>
+
+    <style>
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 5px rgba(255, 152, 0, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.7); }
+      100% { box-shadow: 0 0 5px rgba(255, 152, 0, 0.4); }
+    }
+    .pulse-glow-warning {
+      animation: pulseGlow 2s ease-in-out infinite;
+      border-left: 5px solid #ff9800 !important;
+    }
+    </style>
+
+    <!-- Progress Bar Section for Generating PDF Batch -->
+    <div id="progressSection" class="card mb-4 pulse-glow-warning" style="display: none; background-color: #fffef0;">
+      <div class="card-body">
+        <div class="alert alert-warning mb-3 d-flex align-items-center" role="alert">
+          <i class="fas fa-exclamation-triangle me-2 fs-4"></i>
+          <div>
+            <strong>Mohon ditunggu!</strong> Proses generate dokumen PDF sedang berlangsung di latar belakang.
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="fw-bold"><i class="fas fa-spinner fa-spin me-2"></i>Sedang Memproses Dokumen PDF...</span>
+          <span id="progressText" class="fw-bold">0%</span>
+        </div>
+        <div class="progress" style="height: 22px; border-radius: 11px;">
+          <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark fw-bold" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <small class="text-muted d-block mt-2" id="progressSubtext">Proses sedang berjalan di background. Mohon tunggu hingga selesai. <a href="<?php echo base_url('skl/logs');?>" class="text-secondary fw-bold text-decoration-underline ms-1" target="_blank"><i class="fas fa-external-link-alt"></i> Lihat Detail Log</a></small>
       </div>
     </div>
 
@@ -152,18 +185,27 @@
   function checkProgress() {
     $.getJSON('<?= base_url("siswa/check_pdf_progress") ?>', function(data) {
         if (data.status === 'processing') {
+            const percent = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
+            $('#progressSection').show();
+            $('#progressText').text(percent + '%');
+            $('#progressBar').css('width', percent + '%').attr('aria-valuenow', percent).text(percent + '%');
+            $('#progressSubtext').html('Memproses ' + data.progress + ' dari ' + data.total + ' siswa. Mohon tunggu...');
+
             $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating ('+data.progress+'/'+data.total+')');
             $('#stopPdfBtn').show();
             setTimeout(checkProgress, 2000); // Polling every 2 secs
         } else if (data.status === 'completed') {
+            $('#progressSection').hide();
             $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman (Selesai ' + data.total + ')');
             $('#stopPdfBtn').hide();
             $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
         } else if (data.status === 'stopped') {
+            $('#progressSection').hide();
             $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman (Dihentikan)');
             $('#stopPdfBtn').hide();
             $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
         } else {
+            $('#progressSection').hide();
             $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
             $('#stopPdfBtn').hide();
             $('#stopPdfBtn').prop('disabled', false).html('<i class="fas fa-stop-circle"></i> Stop Generate');
@@ -188,15 +230,30 @@
       }).then((result) => {
           if (result.isConfirmed || result.isDenied) {
               const mode = result.isConfirmed ? 'skip' : 'overwrite';
+              
+              // Tampilkan progressSection secara instan agar ada visual feedback
+              $('#progressSection').show();
+              $('#progressText').text('0%');
+              $('#progressBar').css('width', '0%').attr('aria-valuenow', 0).text('0%');
+              $('#progressSubtext').html('Memulai pemrosesan dokumen... Silakan tunggu beberapa detik.');
+
               $('#generatePdfBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memulai...');
               $('#stopPdfBtn').show();
               
               $.post('<?= base_url("siswa/trigger_pdf_batch") ?>', { mode: mode }, function(res) {
                   const data = JSON.parse(res);
                   if(data.status === 'success') {
+                      Swal.fire({
+                          title: 'Berhasil!',
+                          text: 'Proses generate telah berhasil dimulai di background.',
+                          icon: 'success',
+                          timer: 2000,
+                          showConfirmButton: false
+                      });
                       checkProgress(); // Mulai polling
                   } else {
                       alert(data.message);
+                      $('#progressSection').hide();
                       $('#generatePdfBtn').prop('disabled', false).html('<i class="fas fa-file-pdf"></i> Generate Pengumuman Batch');
                       $('#stopPdfBtn').hide();
                   }

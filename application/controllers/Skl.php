@@ -139,6 +139,18 @@ class Skl extends CI_Controller {
     {
         $siswa = $this->Siswa_model->get_by_token($token);
         if ($siswa) {
+            // Optimasi: Cek apakah PDF hasil batch generate sudah ada
+            $tahun = date('Y');
+            $preGeneratedPdf = FCPATH . "uploads/pengumuman/{$tahun}/skl_{$siswa->nis}.pdf";
+            
+            if (file_exists($preGeneratedPdf)) {
+                $this->load->helper('download');
+                $data = file_get_contents($preGeneratedPdf);
+                $name = 'SKL_' . $siswa->nis . '.pdf';
+                force_download($name, $data);
+                return;
+            }
+
             // Path
             $templatePath = FCPATH . 'template/skl_template.docx';
             $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
@@ -178,7 +190,15 @@ class Skl extends CI_Controller {
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
                 exec($cmd, $output, $returnCode);
             } else {
-                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                    $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                } elseif (file_exists('/usr/bin/libreoffice')) {
+                    $sofficeOptPath = '/usr/bin/libreoffice';
+                } elseif (file_exists('/usr/bin/soffice')) {
+                    $sofficeOptPath = '/usr/bin/soffice';
+                } else {
+                    $sofficeOptPath = 'libreoffice';
+                }
                 $loProfile = FCPATH . "temp/lo_profile_single_" . $siswa->nis . "_" . rand(100, 999);
                 
                 $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";
@@ -214,6 +234,18 @@ class Skl extends CI_Controller {
     {
         $siswa = $this->Siswa_model->get_by_token($token);
         if ($siswa) {
+            // Optimasi: Cek apakah PDF hasil batch generate sudah ada
+            $tahun = date('Y');
+            $preGeneratedPdf = FCPATH . "uploads/pengumuman/{$tahun}/skl_{$siswa->nis}.pdf";
+            
+            if (file_exists($preGeneratedPdf)) {
+                $this->load->helper('download');
+                $data = file_get_contents($preGeneratedPdf);
+                $name = 'SKL_WA_' . $siswa->nis . '.pdf';
+                force_download($name, $data);
+                return;
+            }
+
             // Path
             $templatePath = FCPATH . 'template/skl_template.docx';
             $docxPath = FCPATH . 'temp/skl_wa_' . $siswa->nis . '.docx';
@@ -253,7 +285,15 @@ class Skl extends CI_Controller {
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
                 exec($cmd, $output, $returnCode);
             } else {
-                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                    $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+                } elseif (file_exists('/usr/bin/libreoffice')) {
+                    $sofficeOptPath = '/usr/bin/libreoffice';
+                } elseif (file_exists('/usr/bin/soffice')) {
+                    $sofficeOptPath = '/usr/bin/soffice';
+                } else {
+                    $sofficeOptPath = 'libreoffice';
+                }
                 $loProfile = FCPATH . "temp/lo_profile_wa_" . $siswa->nis . "_" . rand(100, 999);
                 
                 $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";

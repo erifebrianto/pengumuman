@@ -243,17 +243,18 @@
     <script src="<?php echo base_url();?>assets/js/plugin/datatables/datatables.min.js"></script>
 
     <!-- Bootstrap Notify -->
-    <!-- <script src="<?php echo base_url();?>assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script> -->
-
-    <!-- jQuery Vector Maps -->
-    <script src="<?php echo base_url();?>assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
-    <script src="<?php echo base_url();?>assets/js/plugin/jsvectormap/world.js"></script>
+    <script src="<?php echo base_url();?>assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
 
     <!-- Sweet Alert -->
     <script src="<?php echo base_url();?>assets/js/plugin/sweetalert/sweetalert.min.js"></script>
 
     <!-- Kaiadmin JS -->
     <script src="<?php echo base_url();?>assets/js/kaiadmin.min.js"></script>
+
+    <?php if ($this->uri->segment(1) === 'dashboard' || $this->uri->segment(1) === ''): ?>
+    <!-- jQuery Vector Maps -->
+    <script src="<?php echo base_url();?>assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="<?php echo base_url();?>assets/js/plugin/jsvectormap/world.js"></script>
 
     <!-- Kaiadmin DEMO methods, don't include it in your project! -->
     <script src="<?php echo base_url();?>assets/js/setting-demo.js"></script>
@@ -286,5 +287,6 @@
         fillColor: "rgba(255, 165, 52, .14)",
       });
     </script>
+    <?php endif; ?>
   </body>
 </html>
