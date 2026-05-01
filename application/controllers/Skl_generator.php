@@ -142,6 +142,13 @@ class Skl_generator extends CI_Controller {
             // Bersihkan output dari whitespace berlebih
             $result = trim($result);
 
+            // Fallback: Jika cURL gagal karena hosting/domain tidak ter-resolve, panggil method internal secara lokal
+            if ($curl_error || empty($result) || strpos($result, 'cURL Error') !== false) {
+                ob_start();
+                $this->process_single($siswa->nis, $mode);
+                $result = trim(ob_get_clean());
+            }
+
             if ($result === "Success" || $result === "Skipped") {
                 $sukses++;
             } else {
