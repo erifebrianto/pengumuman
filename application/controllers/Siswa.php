@@ -259,16 +259,41 @@ class Siswa extends CI_Controller {
         // Ambil parameter mode (skip/overwrite) dari POST
         $mode = $this->input->post('mode') ? $this->input->post('mode') : 'skip';
 
+        // Buat folder log jika belum ada
+        $log_dir = FCPATH . "application/logs/batch/";
+        if (!is_dir($log_dir)) {
+            mkdir($log_dir, 0755, true);
+        }
+        $log_file = $log_dir . "generate_" . date('Y_m_d') . ".log";
+        $date = date('Y-m-d H:i:s');
+        
+        $msg = "[{$date}] [INFO] Request batch generate dimulai dengan mode: {$mode}" . PHP_EOL;
+        file_put_contents($log_file, $msg, FILE_APPEND);
+
         // Segera kunci database menjadi "processing" dengan progress 0 agar UI tidak melihat status 'completed' yang lama
         $this->Batch_model->update_status(['status' => 'processing', 'progress' => 0]);
 
         $isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         if ($isWindows) {
             $cmd = "start /B php " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode);
+            $msg_cmd = "[{$date}] [INFO] Menjalankan command background (Windows): {$cmd}" . PHP_EOL;
+            file_put_contents($log_file, $msg_cmd, FILE_APPEND);
             pclose(popen($cmd, "r"));
         } else {
-            // Gunakan absolute path XAMPP PHP agar Apache selalu bisa menemukannya
-            $cmd = "/opt/lampp/bin/php " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode) . " > /dev/null 2>&1 &";
+            // Gunakan path PHP dinamis untuk Linux / hosting environment
+            $php_bin = 'php';
+            if (file_exists('/usr/bin/php')) {
+                $php_bin = '/usr/bin/php';
+            } elseif (file_exists('/usr/local/bin/php')) {
+                $php_bin = '/usr/local/bin/php';
+            } elseif (file_exists('/opt/lampp/bin/php')) {
+                $php_bin = '/opt/lampp/bin/php';
+            }
+            
+            $cmd = "{$php_bin} " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode) . " > /dev/null 2>&1 &";
+            
+            $msg_cmd = "[{$date}] [INFO] Menjalankan command background: {$cmd}" . PHP_EOL;
+            file_put_contents($log_file, $msg_cmd, FILE_APPEND);
             exec($cmd);
         }
 
