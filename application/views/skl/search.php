@@ -38,9 +38,10 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4" style="background-image: url('<?= base_url($background) ?>'); background-size: cover; background-repeat: no-repeat;">
+<body class="bg-gray-50 min-h-screen flex flex-col justify-between p-4" style="background-image: url('<?= base_url($background) ?>'); background-size: cover; background-repeat: no-repeat; background-position: center;">
 
-  <div class="w-full max-w-md">
+  <div class="flex-grow flex items-center justify-center py-6">
+    <div class="w-full max-w-md">
     <div class="search-box bg-white rounded-xl shadow-md p-8">
       <div class="text-center mb-6">
         <!-- Logo Sekolah -->
@@ -182,11 +183,14 @@
         </div>
       </div>
     </div>
-
-    <!-- Footer -->
-    <div class="text-center mt-6 text-sm text-gray-500">
-      <p>Sistem Informasi Kelulusan © <?= date('Y') ?></p>
     </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center pb-4">
+    <span class="inline-block bg-white/80 backdrop-blur-md text-gray-800 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm border border-white/20 select-none">
+      Sistem Informasi Kelulusan © <?= date('Y') ?>
+    </span>
   </div>
 
 <script>

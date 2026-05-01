@@ -129,8 +129,10 @@
     </div>
 
     <!-- Footer -->
-    <div class="text-center mt-6 text-sm text-gray-500">
-      <p>Sistem Informasi Kelulusan © <?= date('Y') ?></p>
+    <div class="text-center mt-12 mb-6">
+      <span class="inline-block bg-white/80 backdrop-blur-md text-gray-800 text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm border border-white/20 select-none">
+        Sistem Informasi Kelulusan © <?= date('Y') ?>
+      </span>
     </div>
   </div>
 

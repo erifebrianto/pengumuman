@@ -123,7 +123,7 @@
                 <label class="fw-bold">Logo Sekolah</label>
                 <div class="mb-2 mt-2 text-center">
                   <?php if (!empty($pengaturan->logo_sekolah)) : ?>
-                      <img src="<?= base_url($pengaturan->logo_sekolah); ?>" alt="Logo Sekolah" class="img-thumbnail" style="max-height: 120px;">
+                      <img src="<?= base_url($pengaturan->logo_sekolah) . '?v=' . time(); ?>" alt="Logo Sekolah" class="img-thumbnail" style="max-height: 120px;">
                   <?php else: ?>
                       <div class="p-4 border border-dashed rounded text-muted bg-light"><i class="fas fa-image mb-2" style="font-size: 24px;"></i><br>Belum ada logo</div>
                   <?php endif; ?>
@@ -138,7 +138,7 @@
                 <label class="fw-bold">Background Halaman SKL</label>
                 <div class="mb-2 mt-2 text-center">
                   <?php if (!empty($pengaturan->background)) : ?>
-                      <img src="<?= base_url($pengaturan->background); ?>" alt="Background SKL" class="img-thumbnail" style="max-height: 120px;">
+                      <img src="<?= base_url($pengaturan->background) . '?v=' . time(); ?>" alt="Background SKL" class="img-thumbnail" style="max-height: 120px;">
                   <?php else: ?>
                       <div class="p-4 border border-dashed rounded text-muted bg-light"><i class="fas fa-image mb-2" style="font-size: 24px;"></i><br>Belum ada background</div>
                   <?php endif; ?>
@@ -153,7 +153,7 @@
                 <label class="fw-bold">TTD Kepala Sekolah</label>
                 <div class="mb-2 mt-2 text-center">
                   <?php if (!empty($pengaturan->ttd_kepala_sekolah)) : ?>
-                      <img src="<?= base_url($pengaturan->ttd_kepala_sekolah); ?>" alt="TTD Kepala Sekolah" class="img-thumbnail" style="max-height: 120px;">
+                      <img src="<?= base_url($pengaturan->ttd_kepala_sekolah) . '?v=' . time(); ?>" alt="TTD Kepala Sekolah" class="img-thumbnail" style="max-height: 120px;">
                   <?php else: ?>
                       <div class="p-4 border border-dashed rounded text-muted bg-light"><i class="fas fa-signature mb-2" style="font-size: 24px;"></i><br>Belum ada TTD</div>
                   <?php endif; ?>

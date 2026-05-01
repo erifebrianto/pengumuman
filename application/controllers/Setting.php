@@ -39,16 +39,23 @@ class Setting extends CI_Controller {
                 'verification_method' => $this->input->post('verification_method'),
             ];
 
+        // Load library upload sekali
+        $this->load->library('upload');
+
         // Upload logo sekolah
         if (!empty($_FILES['logo_sekolah']['name'])) {
-            $config['upload_path']   = './uploads/';
-            $config['allowed_types'] = 'jpg|jpeg|png';
-            $config['max_size']      = 2048;
-            $config['file_name']     = 'logo_sekolah';
-            $config['overwrite']     = TRUE;
+            $config_logo['upload_path']   = './uploads/';
+            $config_logo['allowed_types'] = 'jpg|jpeg|png';
+            $config_logo['max_size']      = 2048;
+            $config_logo['file_name']     = 'logo_sekolah_' . time();
+            $config_logo['overwrite']     = TRUE;
 
-            $this->load->library('upload', $config); // Load ulang
+            $this->upload->initialize($config_logo);
             if ($this->upload->do_upload('logo_sekolah')) {
+                // Hapus logo lama jika ada
+                if (!empty($pengaturan->logo_sekolah) && file_exists(FCPATH . $pengaturan->logo_sekolah)) {
+                    @unlink(FCPATH . $pengaturan->logo_sekolah);
+                }
                 $upload_data = $this->upload->data();
                 $data_update['logo_sekolah'] = 'uploads/' . $upload_data['file_name'];
             }
@@ -56,14 +63,18 @@ class Setting extends CI_Controller {
 
         // Upload tanda tangan kepala sekolah
         if (!empty($_FILES['ttd_kepala_sekolah']['name'])) {
-            $config['upload_path']   = './uploads/';
-            $config['allowed_types'] = 'jpg|jpeg|png';
-            $config['max_size']      = 2048;
-            $config['file_name']     = 'ttd_kepala_sekolah';
-            $config['overwrite']     = TRUE;
+            $config_ttd['upload_path']   = './uploads/';
+            $config_ttd['allowed_types'] = 'jpg|jpeg|png';
+            $config_ttd['max_size']      = 2048;
+            $config_ttd['file_name']     = 'ttd_kepala_sekolah_' . time();
+            $config_ttd['overwrite']     = TRUE;
 
-            $this->load->library('upload', $config); // Load ulang
+            $this->upload->initialize($config_ttd);
             if ($this->upload->do_upload('ttd_kepala_sekolah')) {
+                // Hapus ttd lama jika ada
+                if (!empty($pengaturan->ttd_kepala_sekolah) && file_exists(FCPATH . $pengaturan->ttd_kepala_sekolah)) {
+                    @unlink(FCPATH . $pengaturan->ttd_kepala_sekolah);
+                }
                 $upload_data = $this->upload->data();
                 $data_update['ttd_kepala_sekolah'] = 'uploads/' . $upload_data['file_name'];
             }
@@ -71,14 +82,18 @@ class Setting extends CI_Controller {
 
         // Upload background halaman SKL
         if (!empty($_FILES['background']['name'])) {
-            $config['upload_path']   = './uploads/';
-            $config['allowed_types'] = 'jpg|jpeg|png';
-            $config['max_size']      = 2048;
-            $config['file_name']     = 'background_skl';
-            $config['overwrite']     = TRUE;
+            $config_bg['upload_path']   = './uploads/';
+            $config_bg['allowed_types'] = 'jpg|jpeg|png';
+            $config_bg['max_size']      = 2048;
+            $config_bg['file_name']     = 'background_skl_' . time();
+            $config_bg['overwrite']     = TRUE;
 
-            $this->load->library('upload', $config); // Load ulang
+            $this->upload->initialize($config_bg);
             if ($this->upload->do_upload('background')) {
+                // Hapus bg lama jika ada
+                if (!empty($pengaturan->background) && file_exists(FCPATH . $pengaturan->background)) {
+                    @unlink(FCPATH . $pengaturan->background);
+                }
                 $upload_data = $this->upload->data();
                 $data_update['background'] = 'uploads/' . $upload_data['file_name'];
             }
