@@ -3,25 +3,19 @@
             <nav class="pull-left">
               <ul class="nav">
                 <li class="nav-item">
-                  <a class="nav-link" href="http://www.themekita.com">
-                    ThemeKita
+                  <a class="nav-link" href="https://bimacloud.id" target="_blank">
+                    Bimacloud
                   </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#"> Help </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#"> Licenses </a>
                 </li>
               </ul>
             </nav>
             <div class="copyright">
-              2024, made with <i class="fa fa-heart heart text-danger"></i> by
-              <a href="http://www.themekita.com">ThemeKita</a>
+              <?php echo date('Y'); ?>, made with <i class="fa fa-heart heart text-danger"></i> by
+              <a href="https://bimacloud.id" target="_blank">Bimacloud</a>
             </div>
             <div>
               Distributed by
-              <a target="_blank" href="https://themewagon.com/">ThemeWagon</a>.
+              <a target="_blank" href="https://bimacloud.id">Bimacloud</a>.
             </div>
           </div>
         </footer>
@@ -258,7 +252,7 @@
 
     <!-- Kaiadmin DEMO methods, don't include it in your project! -->
     <script src="<?php echo base_url();?>assets/js/setting-demo.js"></script>
-    <script src="<?php echo base_url();?>assets/js/demo.js"></script>
+    <script src="<?php echo base_url();?>assets/js/demo.js?v=<?php echo time(); ?>"></script>
     <script>
       $("#lineChart").sparkline([102, 109, 120, 99, 110, 105, 115], {
         type: "line",
