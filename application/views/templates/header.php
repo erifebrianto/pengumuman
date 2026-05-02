@@ -120,8 +120,20 @@
                         <span class="sub-item">Wablas API</span>
                       </a>
                     </li>
+                    <li>
+                      <a href="<?= base_url('setting/users') ?>">
+                        <span class="sub-item">User Management</span>
+                      </a>
+                    </li>
                   </ul>
                 </div>
+              </li>
+
+              <li class="nav-item">
+                <a href="<?= base_url('auth/logout') ?>">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <p>Logout</p>
+                </a>
               </li>
 
             </ul>
@@ -221,7 +233,7 @@
                     </div>
                     <span class="profile-username">
                       <span class="op-7">Hi,</span>
-                      <span class="fw-bold">Hizrian</span>
+                      <span class="fw-bold"><?= $this->session->userdata('username') ?></span>
                     </span>
                   </a>
                   <ul class="dropdown-menu dropdown-user animated fadeIn">
@@ -236,7 +248,7 @@
                             />
                           </div>
                           <div class="u-text">
-                            <h4>Hizrian</h4>
+                            <h4><?= $this->session->userdata('username') ?></h4>
                             <p class="text-muted">hello@example.com</p>
                             <a
                               href="profile.html"
@@ -246,15 +258,9 @@
                           </div>
                         </div>
                       </li>
-                      <li>
+                       <li>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">My Profile</a>
-                        <a class="dropdown-item" href="#">My Balance</a>
-                        <a class="dropdown-item" href="#">Inbox</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Account Setting</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="<?php echo base_url();?>auth/logout">Logout</a>
+                        <a class="dropdown-item" href="<?php echo base_url();?>auth/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
                       </li>
                     </div>
                   </ul>

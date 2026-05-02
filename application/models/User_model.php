@@ -12,4 +12,13 @@ class User_model extends CI_Model {
         }
         return false;
     }
+
+    public function get_all() {
+        return $this->db->get('users')->result();
+    }
+
+    public function delete($id) {
+        $this->db->where('id', $id);
+        return $this->db->delete('users');
+    }
 }

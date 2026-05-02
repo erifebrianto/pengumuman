@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - DashPro</title>
+    <title>Login - <?= !empty($pengaturan->nama_sekolah) ? $pengaturan->nama_sekolah : 'Sistem Informasi Kelulusan' ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -65,13 +65,19 @@
 <body class="min-h-screen flex items-center justify-center bg-gray-50">
     <div class="login-card w-full max-w-md p-8 bg-white rounded-xl">
         <!-- Logo -->
-        <div class="flex justify-center mb-8">
-            <div class="flex items-center">
-                <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center mr-3">
-                    <i class="fas fa-chart-line text-white text-xl"></i>
+        <div class="flex flex-col items-center justify-center mb-8">
+            <?php if (!empty($pengaturan->logo_sekolah) && file_exists(FCPATH . $pengaturan->logo_sekolah)): ?>
+                <img src="<?= base_url($pengaturan->logo_sekolah) ?>" alt="Logo" class="h-16 w-auto mb-3">
+            <?php elseif (file_exists(FCPATH . 'uploads/logo_sekolah.png')): ?>
+                <img src="<?= base_url('uploads/logo_sekolah.png') ?>" alt="Logo" class="h-16 w-auto mb-3">
+            <?php else: ?>
+                <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center mb-3">
+                    <i class="fas fa-graduation-cap text-white text-xl"></i>
                 </div>
-                <span class="text-2xl font-bold text-gray-800">DashPro</span>
-            </div>
+            <?php endif; ?>
+            <span class="text-xl font-bold text-gray-800 text-center">
+                <?= !empty($pengaturan->nama_sekolah) ? $pengaturan->nama_sekolah : 'Sistem Informasi Kelulusan' ?>
+            </span>
         </div>
         
         <!-- Flash Message -->

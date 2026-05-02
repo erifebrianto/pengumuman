@@ -15,7 +15,9 @@ class Auth extends CI_Controller {
         $this->form_validation->set_rules('password', 'Password', 'required');
 
         if ($this->form_validation->run() === FALSE) {
-            $this->load->view('login');
+            $this->load->model('Setting_model');
+            $data['pengaturan'] = $this->Setting_model->get_first();
+            $this->load->view('login', $data);
         } else {
             $user = $this->User_model->login(
                 $this->input->post('username'),

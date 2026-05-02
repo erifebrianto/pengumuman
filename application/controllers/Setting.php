@@ -243,4 +243,42 @@ class Setting extends CI_Controller {
         }
         redirect('setting/wablas');
     }
+
+    public function users()
+    {
+        $this->load->model('User_model');
+        $data['users'] = $this->User_model->get_all();
+        $this->load->view('templates/header');
+        $this->load->view('setting/users', $data);
+        $this->load->view('templates/footer');
+    }
+
+    public function user_add()
+    {
+        if ($this->input->method() === 'post') {
+            $this->load->model('User_model');
+            $data = [
+                'username' => $this->input->post('username'),
+                'password' => password_hash($this->input->post('password'), PASSWORD_DEFAULT)
+            ];
+            $this->User_model->register($data);
+            $this->session->set_flashdata('success', 'User berhasil ditambahkan.');
+            redirect('setting/users');
+        }
+        $this->load->view('templates/header');
+        $this->load->view('setting/user_add');
+        $this->load->view('templates/footer');
+    }
+
+    public function user_delete($id)
+    {
+        $this->load->model('User_model');
+        if ($id != $this->session->userdata('user_id')) {
+            $this->User_model->delete($id);
+            $this->session->set_flashdata('success', 'User berhasil dihapus.');
+        } else {
+            $this->session->set_flashdata('error', 'Tidak dapat menghapus user yang sedang digunakan.');
+        }
+        redirect('setting/users');
+    }
 }
