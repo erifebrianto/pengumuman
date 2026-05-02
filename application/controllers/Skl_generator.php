@@ -35,7 +35,7 @@ class Skl_generator extends CI_Controller {
         $formatted_message = "[{$date}] [{$type}] {$message}" . PHP_EOL;
         
         // Write to file
-        file_put_contents($file, $formatted_message, FILE_APPEND);
+        @file_put_contents($file, $formatted_message, FILE_APPEND);
         
         // Output to CLI as well
         echo $formatted_message;
@@ -129,36 +129,17 @@ class Skl_generator extends CI_Controller {
                 continue; 
             }
 
-            // Trigger proses tunggal via HTTP cURL internal untuk mengisolasi proses LibreOffice agar tidak bocor/zombie
-            $url = base_url("index.php/skl_generator/process_single/{$siswa->nis}/{$mode}");
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Max 30 detik per siswa
-            $result = curl_exec($ch);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
+            // Call method internal directly to ensure it works on both local and hosting
+            ob_start();
+            $this->process_single($siswa->nis, $mode);
+            $result = trim(ob_get_clean());
 
-            // Bersihkan output dari whitespace berlebih
-            $result = trim($result);
-
-            // Fallback: Jika cURL gagal karena hosting/domain tidak ter-resolve, panggil method internal secara lokal
-            if ($curl_error || empty($result) || strpos($result, 'cURL Error') !== false) {
-                ob_start();
-                $this->process_single($siswa->nis, $mode);
-                $result = trim(ob_get_clean());
-            }
-
-            if ($result === "Success" || $result === "Skipped") {
+            if (strpos($result, "Success") !== false || strpos($result, "Skipped") !== false) {
                 $sukses++;
             } else {
-                $errorMsg = $result ? $result : "cURL Error: " . $curl_error;
-                $this->write_log("Gagal konversi PDF: NIS {$siswa->nis}. Reason: {$errorMsg}", "ERROR");
+                $this->write_log("Gagal konversi PDF: NIS {$siswa->nis}. Reason: {$result}", "ERROR");
                 $gagal++;
-            }
-
-            // Beri jeda 50 milidetik agar CPU tidak dipaksa ke 100% Usage (Aman dari Spike/Crash)
-            usleep(50000); 
+            } 
 
             // Update counter
             $processed++;
@@ -245,28 +226,22 @@ class Skl_generator extends CI_Controller {
             $cmd = $sofficePath . ' --headless --invisible --nologo --nodefault --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg($upload_dir);
             exec($cmd, $output, $returnCode);
         } else {
-            $cmd = "unoconv -f pdf -o " . escapeshellarg($upload_dir . $pdfFileName) . " " . escapeshellarg($docxPath) . " 2>&1";
-            exec($cmd, $output, $returnCode);
+            if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
+            } elseif (file_exists('/usr/bin/libreoffice')) {
+                $sofficeOptPath = '/usr/bin/libreoffice';
+            } elseif (file_exists('/usr/bin/soffice')) {
+                $sofficeOptPath = '/usr/bin/soffice';
+            } else {
+                $sofficeOptPath = 'libreoffice';
+            }
+            $loProfile = $cli_temp_dir . "lo_profile_" . $siswa->nis . "_" . rand(100, 999);
+            $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg($upload_dir) . " 2>&1";
+            
+            $outputStr = shell_exec($cmd);
 
-            $outputStr = implode(" ", $output);
-            if ($returnCode === 127 || strpos($outputStr, 'not found') !== false) {
-                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
-                    $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
-                } elseif (file_exists('/usr/bin/libreoffice')) {
-                    $sofficeOptPath = '/usr/bin/libreoffice';
-                } elseif (file_exists('/usr/bin/soffice')) {
-                    $sofficeOptPath = '/usr/bin/soffice';
-                } else {
-                    $sofficeOptPath = 'libreoffice';
-                }
-                $loProfile = $cli_temp_dir . "lo_profile_" . $siswa->nis . "_" . rand(100, 999);
-                $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg($upload_dir) . " 2>&1";
-                
-                $outputStr = shell_exec($cmd);
-
-                if (is_dir($loProfile)) {
-                    shell_exec("rm -rf " . escapeshellarg($loProfile));
-                }
+            if (is_dir($loProfile)) {
+                shell_exec("rm -rf " . escapeshellarg($loProfile));
             }
         }
 

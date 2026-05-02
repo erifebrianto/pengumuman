@@ -45,7 +45,6 @@ class Siswa extends CI_Controller {
     }    
     public function create() {
         if ($this->input->post()) {
-            // Simpan siswa
             $siswa_data = [
                 'user_id'        => $this->session->userdata('user_id'),
                 'nama_lengkap'   => $this->input->post('nama_lengkap'),
@@ -53,35 +52,26 @@ class Siswa extends CI_Controller {
                 'tanggal_lahir'  => $this->input->post('tanggal_lahir'),
                 'nis'            => $this->input->post('nis'),
                 'nisn'           => $this->input->post('nisn'),
-                'no_hp'          => $this->input->post('no_hp'),
                 'no_ujian'       => $this->input->post('no_ujian'),
                 'kelas'          => $this->input->post('kelas'),
-                'nama_ortu'      => $this->input->post('nama_ortu'),
-                'rata_rata'      => $this->input->post('rata_rata'),
                 'status'         => $this->input->post('status'),
                 'created_at'     => date('Y-m-d H:i:s')
             ];
-            $siswa_id = $this->Siswa_model->insert($siswa_data);
 
-            // Simpan nilai siswa
-            $nilai = $this->input->post('nilai');
-            $nilai_data = [];
-            foreach ($nilai as $mapel_id => $val) {
-                $nilai_data[] = [
-                    'siswa_id'  => $siswa_id,
-                    'mapel_id'  => $mapel_id,
-                    'nilai'     => $val
-                ];
+            $existing = $this->Siswa_model->get_by_nis($siswa_data['nis']);
+            
+            if ($existing) {
+                $this->Siswa_model->update($existing->id, $siswa_data);
+            } else {
+                $this->Siswa_model->insert($siswa_data);
             }
-            $this->Nilai_model->insert_batch($nilai_data);
 
+            $this->session->set_flashdata('import_success', "Berhasil menyimpan data siswa secara manual.");
             redirect('siswa');
         }
 
-        $data['jurusan'] = $this->Jurusan_model->get_all();
-
         $this->load->view('templates/header');
-        $this->load->view('siswa/create', $data);
+        $this->load->view('siswa/create');
         $this->load->view('templates/footer');
     }
 
@@ -129,36 +119,39 @@ class Siswa extends CI_Controller {
                     }
                 }
 
-                // Identify basic info (flexible names)
-                $siswa = [
-                    'nama_lengkap'  => $mapped_row['Nama'] ?? $mapped_row['Nama Lengkap'] ?? null,
-                    'tempat_lahir'  => $mapped_row['Tempat Lahir'] ?? null,
-                    'tanggal_lahir' => $mapped_row['Tanggal Lahir'] ?? null,
-                    'nis'           => $mapped_row['NIS'] ?? null,
-                    'nisn'          => $mapped_row['NISN'] ?? null,
-                    'no_hp'         => $mapped_row['No HP'] ?? $mapped_row['Nomor HP'] ?? null,
-                    'no_ujian'      => $mapped_row['No Ujian'] ?? $mapped_row['Nomor Ujian'] ?? null,
-                    'kelas'         => $mapped_row['Kelas'] ?? null,
-                    'jurusan'       => $mapped_row['Jurusan'] ?? null,
-                    'nama_ortu'     => $mapped_row['Nama Ortu'] ?? $mapped_row['Wali'] ?? null,
-                    'rata_rata'     => $mapped_row['Rata-rata'] ?? $mapped_row['Rata Rata'] ?? null,
-                    'status'        => $mapped_row['Status'] ?? $mapped_row['Keterangan'] ?? null,
-                    'nilai_mapel'   => []
-                ];
-
-                // Anything else is considered Mapel
-                $not_mapel = ['Nama', 'Nama Lengkap', 'Tempat Lahir', 'Tanggal Lahir', 'NIS', 'NISN', 'No HP', 'Nomor HP', 'No Ujian', 'Nomor Ujian', 'Kelas', 'Jurusan', 'Nama Ortu', 'Wali', 'Rata-rata', 'Rata Rata', 'Status', 'Keterangan'];
-                
-                foreach ($mapped_row as $key => $value) {
-                    if (!in_array($key, $not_mapel) && !empty($key)) {
-                        $siswa['nilai_mapel'][] = [
-                            'mapel' => $key,
-                            'nilai' => $value
-                        ];
+                $raw_tgl = $mapped_row['Tanggal Lahir'] ?? null;
+                $tanggal_lahir = null;
+                if (!empty($raw_tgl)) {
+                    if (is_numeric($raw_tgl)) {
+                        try {
+                            $tanggal_lahir = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($raw_tgl)->format('Y-m-d');
+                        } catch (Exception $e) {
+                            $tanggal_lahir = null;
+                        }
+                    } else {
+                        // Ganti '/' dengan '-' agar format d/m/Y diproses dengan benar sebagai d-m-Y oleh strtotime
+                        $time = strtotime(str_replace('/', '-', $raw_tgl));
+                        if ($time) {
+                            $tanggal_lahir = date('Y-m-d', $time);
+                        } else {
+                            $tanggal_lahir = null;
+                        }
                     }
                 }
 
-                if (!empty($siswa['nisn']) || !empty($siswa['nama_lengkap'])) {
+                // Identify basic info based on SKL Format
+                $siswa = [
+                    'nama_lengkap'  => $mapped_row['Nama Lengkap Siswa'] ?? $mapped_row['Nama Lengkap'] ?? $mapped_row['Nama'] ?? null,
+                    'nis'           => $mapped_row['Nomor Induk Siswa'] ?? $mapped_row['NIS'] ?? null,
+                    'nisn'          => $mapped_row['NISN'] ?? null,
+                    'kelas'         => $mapped_row['Kelas Siswa'] ?? $mapped_row['Kelas'] ?? null,
+                    'no_ujian'      => $mapped_row['Nomor Ujian'] ?? $mapped_row['No Ujian'] ?? null,
+                    'tempat_lahir'  => $mapped_row['Tempat Lahir'] ?? null,
+                    'tanggal_lahir' => $tanggal_lahir,
+                    'status'        => $mapped_row['Status Lulus'] ?? $mapped_row['Status'] ?? $mapped_row['Keterangan'] ?? null,
+                ];
+
+                if (!empty($siswa['nis']) || !empty($siswa['nama_lengkap'])) {
                     $data['preview'][] = $siswa;
                 }
             }
@@ -174,62 +167,41 @@ class Siswa extends CI_Controller {
     {
         $preview = $this->session->userdata('preview_data');
         if ($preview) {
+            $berhasil = 0;
+            $gagal = 0;
             foreach ($preview as $row) {
-                // Resolve Jurusan
-                $jurusan = null;
-                if (!empty($row['jurusan'])) {
-                    $jurusan = $this->Jurusan_model->get_by_name($row['jurusan']);
-                }
-
                 $siswa_data = [
                     'user_id'       => $this->session->userdata('user_id'),
-                    'jurusan_id'    => $jurusan ? $jurusan->id : null,
                     'nama_lengkap'  => $row['nama_lengkap'],
                     'tempat_lahir'  => $row['tempat_lahir'],
                     'tanggal_lahir' => $row['tanggal_lahir'],
                     'nis'           => $row['nis'],
                     'nisn'          => $row['nisn'],
-                    'no_hp'         => $row['no_hp'],
                     'no_ujian'      => $row['no_ujian'],
                     'kelas'         => $row['kelas'],
-                    'nama_ortu'     => $row['nama_ortu'],
-                    'rata_rata'     => $row['rata_rata'],
                     'status'        => $row['status'],
                     'created_at'    => date('Y-m-d H:i:s')
                 ];
 
-                // Cek if exists by NISN or NIS
+                // Cek if exists by NIS
                 $existing = $this->Siswa_model->get_by_nis($row['nis']);
-                if (!$existing && !empty($row['nisn'])) {
-                    $existing = $this->db->get_where('siswa', ['nisn' => $row['nisn']])->row();
-                }
 
                 if ($existing) {
-                    $this->Siswa_model->update($existing->id, $siswa_data);
-                    $siswa_id = $existing->id;
-                    // Delete old scores
-                    $this->db->delete('nilai_siswa', ['siswa_id' => $siswa_id]);
+                    if ($this->Siswa_model->update($existing->id, $siswa_data)) {
+                        $berhasil++;
+                    } else {
+                        $gagal++;
+                    }
                 } else {
-                    $siswa_id = $this->Siswa_model->insert($siswa_data);
-                }
-
-                // Import Nilai
-                if ($jurusan && isset($row['nilai_mapel']) && is_array($row['nilai_mapel'])) {
-                    foreach ($row['nilai_mapel'] as $pair) {
-                        if ($pair['nilai'] === null || $pair['nilai'] === '') continue;
-
-                        $mapel = $this->Mata_pelajaran_model->get_by_name_and_jurusan($pair['mapel'], $jurusan->id);
-                        if ($mapel) {
-                            $this->Nilai_model->create([
-                                'siswa_id' => $siswa_id,
-                                'mapel_id' => $mapel->id,
-                                'nilai'    => $pair['nilai']
-                            ]);
-                        }
+                    if ($this->Siswa_model->insert($siswa_data)) {
+                        $berhasil++;
+                    } else {
+                        $gagal++;
                     }
                 }
             }
             $this->session->unset_userdata('preview_data');
+            $this->session->set_flashdata('import_success', "Berhasil import $berhasil data siswa. Gagal: $gagal data.");
         }
         redirect('siswa');
     }

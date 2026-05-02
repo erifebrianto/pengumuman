@@ -139,6 +139,16 @@
 
 <script>
   $(document).ready(function () {
+    <?php if ($this->session->flashdata('import_success')): ?>
+    Swal.fire({
+      icon: 'success',
+      title: 'Import Selesai',
+      text: '<?= $this->session->flashdata('import_success'); ?>',
+      timer: 5000,
+      showConfirmButton: true
+    });
+    <?php endif; ?>
+
     $('#siswaTable').DataTable({
       language: {
         search: "_INPUT_",

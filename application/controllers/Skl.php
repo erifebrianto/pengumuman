@@ -355,7 +355,7 @@ class Skl extends CI_Controller {
         $this->load->helper('file');
 
         // Konfigurasi upload template SKL
-        $config['upload_path']   = './template/';
+        $config['upload_path']   = FCPATH . 'template/';
         $config['allowed_types'] = 'docx';
         $config['max_size']      = 2048;
         $config['file_name']     = 'skl_template.docx';

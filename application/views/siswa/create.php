@@ -1,94 +1,79 @@
 <div class="container">
     <div class="page-inner">
-        <h3>Form Tambah Siswa dan Nilai</h3>
-        <form method="POST" action="<?= base_url('siswa/create') ?>">
-            <div class="row">
-                <div class="col-md-6">
-                    <label>Nama Lengkap</label>
-                    <input type="text" name="nama_lengkap" class="form-control" required>
+        <div class="page-header">
+            <h3 class="fw-bold mb-3">Tambah Data Siswa</h3>
+            <ul class="breadcrumbs mb-3">
+                <li class="nav-home"><a href="<?= base_url('dashboard') ?>"><i class="icon-home"></i></a></li>
+                <li class="separator"><i class="icon-arrow-right"></i></li>
+                <li class="nav-item"><a href="<?= base_url('siswa') ?>">Data Siswa</a></li>
+                <li class="separator"><i class="icon-arrow-right"></i></li>
+                <li class="nav-item"><a href="#">Tambah Manual</a></li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Form Tambah Siswa (SKL)</div>
+                    </div>
+                    <form method="POST" action="<?= base_url('siswa/create') ?>">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nama Lengkap Siswa</label>
+                                        <input type="text" name="nama_lengkap" class="form-control" required>
+                                    </div>
 
-                    <label>Tempat Lahir</label>
-                    <input type="text" name="tempat_lahir" class="form-control" required>
+                                    <div class="form-group">
+                                        <label>Nomor Induk Siswa (NIS)</label>
+                                        <input type="text" name="nis" class="form-control" required>
+                                    </div>
 
-                    <label>Tanggal Lahir</label>
-                    <input type="date" name="tanggal_lahir" class="form-control" required>
+                                    <div class="form-group">
+                                        <label>NISN</label>
+                                        <input type="text" name="nisn" class="form-control">
+                                    </div>
 
-                    <label>NIS</label>
-                    <input type="text" name="nis" class="form-control" required>
+                                    <div class="form-group">
+                                        <label>Kelas Siswa</label>
+                                        <input type="text" name="kelas" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Nomor Ujian</label>
+                                        <input type="text" name="no_ujian" class="form-control" required>
+                                    </div>
 
-                    <label>NISN</label>
-                    <input type="text" name="nisn" class="form-control" required>
+                                    <div class="form-group">
+                                        <label>Tempat Lahir</label>
+                                        <input type="text" name="tempat_lahir" class="form-control" required>
+                                    </div>
 
-                    <label>No HP (WhatsApp)</label>
-                    <input type="text" name="no_hp" class="form-control" placeholder="Contoh: 0812xx" required>
-                </div>
-                <div class="col-md-6">
-                    <label>No Ujian</label>
-                    <input type="text" name="no_ujian" class="form-control" required>
+                                    <div class="form-group">
+                                        <label>Tanggal Lahir</label>
+                                        <input type="date" name="tanggal_lahir" class="form-control" required>
+                                    </div>
 
-                    <label>Kelas</label>
-                    <input type="text" name="kelas" class="form-control" required>
-
-                    <label>Nama Orang Tua</label>
-                    <input type="text" name="nama_ortu" class="form-control" required>
-
-                    <label>Rata-rata</label>
-                    <input type="number" step="0.01" name="rata_rata" class="form-control">
-
-                    <label>Status</label>
-                    <select name="status" class="form-control">
-                        <option value="lulus">Lulus</option>
-                        <option value="tidak lulus">Tidak Lulus</option>
-                    </select>
+                                    <div class="form-group">
+                                        <label>Status Lulus</label>
+                                        <select name="status" class="form-control" required>
+                                            <option value="">-- Pilih Status --</option>
+                                            <option value="Lulus">Lulus</option>
+                                            <option value="Tidak Lulus">Tidak Lulus</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-action">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Simpan Data</button>
+                            <a href="<?= base_url('siswa') ?>" class="btn btn-danger"><i class="fas fa-times"></i> Batal</a>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <hr>
-
-            <label>Pilih Jurusan</label>
-            <select id="jurusan_select" class="form-control mb-3">
-                <option value="">-- Pilih Jurusan --</option>
-                <?php foreach ($jurusan as $j): ?>
-                    <option value="<?= $j->id ?>"><?= $j->jurusan ?></option>
-                <?php endforeach; ?>
-            </select>
-
-            <div id="form_mapel_nilai">
-                <!-- Mapel dan Nilai akan muncul di sini -->
-            </div>
-
-            <button type="submit" class="btn btn-primary mt-3">Simpan</button>
-        </form>
+        </div>
     </div>
 </div>
-
-<script>
-document.getElementById('jurusan_select').addEventListener('change', function() {
-    let jurusan_id = this.value;
-    let container = document.getElementById('form_mapel_nilai');
-    container.innerHTML = 'Loading...';
-
-    fetch('<?= base_url("siswa/get_mapel_by_jurusan") ?>', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'jurusan_id=' + jurusan_id
-    })
-    .then(res => res.json())
-    .then(data => {
-        let html = '<h5>Nilai Mata Pelajaran</h5>';
-        data.forEach(function(item) {
-            html += `
-                <div class="form-group">
-                    <label>${item.nama_mata_pelajaran}</label>
-                    <input type="number" name="nilai[${item.id}]" class="form-control" required>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    })
-    .catch(err => {
-        container.innerHTML = 'Gagal mengambil data mata pelajaran.';
-        console.error(err);
-    });
-});
-</script>

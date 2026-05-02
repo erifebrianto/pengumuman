@@ -20,27 +20,21 @@
             <div class="card-category">Unduh dan isi template sebelum upload.</div>
           </div>
           <div class="card-body">
-            <a href="<?= base_url('assets/template_import_siswa.xlsx') ?>" class="btn btn-success btn-block mb-4" download>
-              <i class="fas fa-download"></i> Unduh Template Excel
-            </a>
+            <div class="alert alert-info">Buat file Excel (.xlsx) baru dengan nama header kolom (baris pertama) persis seperti "Isi" di bawah ini.</div>
             <p class="fw-bold mb-2">Urutan Kolom Wajib:</p>
             <table class="table table-sm table-bordered text-sm">
               <thead class="table-dark">
                 <tr><th>Kolom</th><th>Isi</th></tr>
               </thead>
               <tbody>
-                <tr><td>A</td><td>Nama Lengkap</td></tr>
-                <tr><td>B</td><td>Tempat Lahir</td></tr>
-                <tr><td>C</td><td>Tanggal Lahir (YYYY-MM-DD)</td></tr>
-                <tr><td>D</td><td>NIS</td></tr>
-                <tr><td>E</td><td>NISN</td></tr>
-                <tr><td class="text-success fw-bold">F</td><td class="text-success fw-bold">No HP (WhatsApp)</td></tr>
-                <tr><td>G</td><td>No Ujian</td></tr>
-                <tr><td>H</td><td>Kelas</td></tr>
-                <tr><td>I</td><td>Nama Orang Tua</td></tr>
-                <tr><td>J</td><td>Rata-rata Nilai</td></tr>
-                <tr><td>K</td><td>Status (Lulus / Tidak Lulus)</td></tr>
-                <tr><td>L-dst</td><td>Nama Mapel, Nilai (pasangan kolom)</td></tr>
+                <tr><td>A</td><td>Nama Lengkap Siswa</td></tr>
+                <tr><td>B</td><td>Nomor Induk Siswa</td></tr>
+                <tr><td>C</td><td>NISN</td></tr>
+                <tr><td>D</td><td>Kelas Siswa</td></tr>
+                <tr><td>E</td><td>Nomor Ujian</td></tr>
+                <tr><td>F</td><td>Tempat Lahir</td></tr>
+                <tr><td>G</td><td>Tanggal Lahir</td></tr>
+                <tr><td>H</td><td>Status Lulus</td></tr>
               </tbody>
             </table>
             <div class="alert alert-warning mt-2 p-2">
