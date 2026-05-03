@@ -210,7 +210,7 @@ class Siswa extends CI_Controller {
                 // Parsing dynamic subjects
                 $nilai = [];
                 foreach ($mapped_row as $header_name => $col_val) {
-                    if (!in_array($header_name, $siswa_fields) && !empty($header_name)) {
+                    if (strpos($header_name, '__norm_') !== 0 && !in_array($header_name, $siswa_fields) && !empty($header_name)) {
                         $normalized_name = $subject_mappings[$header_name] ?? $header_name;
                         $nilai[$normalized_name] = $col_val;
                     }
