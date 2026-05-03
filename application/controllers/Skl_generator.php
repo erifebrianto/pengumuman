@@ -222,9 +222,36 @@ class Skl_generator extends CI_Controller {
             // Populate all available subject scores
             $this->load->model('Nilai_model');
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
+            $short_map = [
+                'Pendidikan Agama Islam dan Budi Pekerti' => 'n_agama',
+                'Pendidikan Agama dan Budi Pekerti' => 'n_agama',
+                'Pendidikan Pancasila' => 'n_pancasila',
+                'Bahasa Indonesia' => 'n_indonesia',
+                'Pendidikan Jasmani, Olahraga dan Kesehatan' => 'n_pjok',
+                'Sejarah' => 'n_sejarah',
+                'Seni Budaya' => 'n_seni',
+                'Matematika' => 'n_matematika',
+                'Bahasa Inggris' => 'n_inggris',
+                'Informatika' => 'n_informatika',
+                'Projek Ilmu Pengetahuan Alam dan Sosial' => 'n_ipas',
+                'Dasar-dasar Program Keahlian' => 'n_dpk',
+                'Konsentrasi Keahlian' => 'n_kk',
+                'Kreativitas, Inovasi, dan Kewirausahaan' => 'n_pkk',
+                'Praktik Kerja Lapangan' => 'n_pkl',
+                'Mata Pelajaran Pilihan' => 'n_pilihan',
+                'Bahasa Jawa' => 'n_jawa',
+            ];
             foreach ($nilai_siswa as $n) {
-                $clean_name = preg_replace('/_+/', '_', strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran)));
+                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
                 $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
+                $clean_name_collapsed = preg_replace('/_+/', '_', $clean_name);
+                if ($clean_name !== $clean_name_collapsed) {
+                    $templateProcessor->setValue('n_' . $clean_name_collapsed, $n->nilai);
+                }
+
+                if (isset($short_map[$n->nama_mata_pelajaran])) {
+                    $templateProcessor->setValue($short_map[$n->nama_mata_pelajaran], $n->nilai);
+                }
             }
 
             $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
