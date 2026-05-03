@@ -4,7 +4,7 @@ class Nilai_model extends CI_Model {
         return $this->db->insert_batch('nilai_siswa', $data);
     }
     public function get_nilai_with_mapel($siswa_id) {
-        $this->db->select('nilai_siswa.nilai, mata_pelajaran.nama_mata_pelajaran');
+        $this->db->select('nilai_siswa.nilai, mata_pelajaran.nama_mata_pelajaran, mata_pelajaran.kode_mapel');
         $this->db->from('nilai_siswa');
         $this->db->join('mata_pelajaran', 'nilai_siswa.mapel_id = mata_pelajaran.id');
         $this->db->where('nilai_siswa.siswa_id', $siswa_id);

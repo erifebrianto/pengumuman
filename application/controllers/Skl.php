@@ -15,6 +15,39 @@ class Skl extends CI_Controller {
         $this->load->model('Countdown_model');
         $this->db->query("ALTER TABLE pengaturan MODIFY verification_method varchar(255) DEFAULT 'exam_number_nis'");
         $this->db->query("ALTER TABLE siswa MODIFY rata_rata decimal(5,2) DEFAULT NULL");
+
+        $short_map = [
+            'Pendidikan Agama Islam dan Budi Pekerti' => 'n_agama',
+            'Pendidikan Agama dan Budi Pekerti' => 'n_agama',
+            'Pendidikan Pancasila' => 'n_pancasila',
+            'Bahasa Indonesia' => 'n_indonesia',
+            'Pendidikan Jasmani, Olahraga dan Kesehatan' => 'n_pjok',
+            'Sejarah' => 'n_sejarah',
+            'Seni Budaya' => 'n_seni',
+            'Matematika' => 'n_matematika',
+            'Bahasa Inggris' => 'n_inggris',
+            'Informatika' => 'n_informatika',
+            'Projek Ilmu Pengetahuan Alam dan Sosial' => 'n_ipas',
+            'Dasar-dasar Program Keahlian' => 'n_dpk',
+            'Konsentrasi Keahlian' => 'n_kk',
+            'Kreativitas, Inovasi, dan Kewirausahaan' => 'n_pkk',
+            'Praktik Kerja Lapangan' => 'n_pkl',
+            'Mata Pelajaran Pilihan' => 'n_pilihan',
+            'Bahasa Jawa' => 'n_jawa',
+        ];
+        foreach ($short_map as $mapel_name => $kode) {
+            $existing = $this->db->get_where('mata_pelajaran', ['nama_mata_pelajaran' => $mapel_name])->row();
+            if ($existing) {
+                if ($existing->kode_mapel !== $kode) {
+                    $this->db->query("UPDATE mata_pelajaran SET kode_mapel = ? WHERE id = ?", [$kode, $existing->id]);
+                }
+            } else {
+                $this->db->insert('mata_pelajaran', [
+                    'nama_mata_pelajaran' => $mapel_name,
+                    'kode_mapel' => $kode
+                ]);
+            }
+        }
     }
 
     public function search()
@@ -206,37 +239,57 @@ class Skl extends CI_Controller {
             // Populate all available subject scores
             $this->load->model('Nilai_model');
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
-            $short_map = [
-                'Pendidikan Agama Islam dan Budi Pekerti' => 'n_agama',
-                'Pendidikan Agama dan Budi Pekerti' => 'n_agama',
-                'Pendidikan Pancasila' => 'n_pancasila',
-                'Bahasa Indonesia' => 'n_indonesia',
-                'Pendidikan Jasmani, Olahraga dan Kesehatan' => 'n_pjok',
-                'Sejarah' => 'n_sejarah',
-                'Seni Budaya' => 'n_seni',
-                'Matematika' => 'n_matematika',
-                'Bahasa Inggris' => 'n_inggris',
-                'Informatika' => 'n_informatika',
-                'Projek Ilmu Pengetahuan Alam dan Sosial' => 'n_ipas',
-                'Dasar-dasar Program Keahlian' => 'n_dpk',
-                'Konsentrasi Keahlian' => 'n_kk',
-                'Kreativitas, Inovasi, dan Kewirausahaan' => 'n_pkk',
-                'Praktik Kerja Lapangan' => 'n_pkl',
-                'Mata Pelajaran Pilihan' => 'n_pilihan',
-                'Bahasa Jawa' => 'n_jawa',
-            ];
+            $siswa_scores = [];
             foreach ($nilai_siswa as $n) {
-                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
-                $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
-                $clean_name_collapsed = preg_replace('/_+/', '_', $clean_name);
-                if ($clean_name !== $clean_name_collapsed) {
-                    $templateProcessor->setValue('n_' . $clean_name_collapsed, $n->nilai);
-                }
+                $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+            }
 
-                if (isset($short_map[$n->nama_mata_pelajaran])) {
-                    $templateProcessor->setValue($short_map[$n->nama_mata_pelajaran], $n->nilai);
+            $all_mapel = $this->db->get('mata_pelajaran')->result();
+            foreach ($all_mapel as $mp) {
+                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $mp->nama_mata_pelajaran));
+                $clean_name_collapsed = preg_replace('/_+/', '_', $clean_name);
+
+                if (isset($siswa_scores[$mp->nama_mata_pelajaran]) && is_numeric($siswa_scores[$mp->nama_mata_pelajaran])) {
+                    $nilai_val = $siswa_scores[$mp->nama_mata_pelajaran];
+                    $templateProcessor->setValue('n_' . $clean_name, $nilai_val);
+                    if ($clean_name !== $clean_name_collapsed) {
+                        $templateProcessor->setValue('n_' . $clean_name_collapsed, $nilai_val);
+                    }
+                    if (!empty($mp->kode_mapel)) {
+                        $templateProcessor->setValue($mp->kode_mapel, $nilai_val);
+                    }
+                } else {
+                    $templateProcessor->setValue('n_' . $clean_name, '');
+                    if ($clean_name !== $clean_name_collapsed) {
+                        $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                    }
+                    if (!empty($mp->kode_mapel)) {
+                        $templateProcessor->setValue($mp->kode_mapel, '');
+                    }
                 }
             }
+
+            // Opsi: Tabel dinamis via ${tabel_nilai}
+            $table = new \PhpOffice\PhpWord\Element\Table([
+                'borderSize' => 6,
+                'borderColor' => '000000',
+                'cellMargin' => 80
+            ]);
+            $table->addRow();
+            $table->addCell(800)->addText("No", ['bold' => true]);
+            $table->addCell(6000)->addText("Mata Pelajaran", ['bold' => true]);
+            $table->addCell(1200)->addText("Nilai", ['bold' => true]);
+
+            $no_table = 1;
+            foreach ($nilai_siswa as $n) {
+                if (is_numeric($n->nilai)) {
+                    $table->addRow();
+                    $table->addCell(800)->addText($no_table++);
+                    $table->addCell(6000)->addText($n->nama_mata_pelajaran);
+                    $table->addCell(1200)->addText(number_format((float)$n->nilai, 2));
+                }
+            }
+            $templateProcessor->setComplexValue('tabel_nilai', $table);
 
             // Gunakan rich text untuk status lulus / tidak lulus
             $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
@@ -355,37 +408,57 @@ class Skl extends CI_Controller {
             // Populate all available subject scores
             $this->load->model('Nilai_model');
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
-            $short_map = [
-                'Pendidikan Agama Islam dan Budi Pekerti' => 'n_agama',
-                'Pendidikan Agama dan Budi Pekerti' => 'n_agama',
-                'Pendidikan Pancasila' => 'n_pancasila',
-                'Bahasa Indonesia' => 'n_indonesia',
-                'Pendidikan Jasmani, Olahraga dan Kesehatan' => 'n_pjok',
-                'Sejarah' => 'n_sejarah',
-                'Seni Budaya' => 'n_seni',
-                'Matematika' => 'n_matematika',
-                'Bahasa Inggris' => 'n_inggris',
-                'Informatika' => 'n_informatika',
-                'Projek Ilmu Pengetahuan Alam dan Sosial' => 'n_ipas',
-                'Dasar-dasar Program Keahlian' => 'n_dpk',
-                'Konsentrasi Keahlian' => 'n_kk',
-                'Kreativitas, Inovasi, dan Kewirausahaan' => 'n_pkk',
-                'Praktik Kerja Lapangan' => 'n_pkl',
-                'Mata Pelajaran Pilihan' => 'n_pilihan',
-                'Bahasa Jawa' => 'n_jawa',
-            ];
+            $siswa_scores = [];
             foreach ($nilai_siswa as $n) {
-                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
-                $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
-                $clean_name_collapsed = preg_replace('/_+/', '_', $clean_name);
-                if ($clean_name !== $clean_name_collapsed) {
-                    $templateProcessor->setValue('n_' . $clean_name_collapsed, $n->nilai);
-                }
+                $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+            }
 
-                if (isset($short_map[$n->nama_mata_pelajaran])) {
-                    $templateProcessor->setValue($short_map[$n->nama_mata_pelajaran], $n->nilai);
+            $all_mapel = $this->db->get('mata_pelajaran')->result();
+            foreach ($all_mapel as $mp) {
+                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $mp->nama_mata_pelajaran));
+                $clean_name_collapsed = preg_replace('/_+/', '_', $clean_name);
+
+                if (isset($siswa_scores[$mp->nama_mata_pelajaran]) && is_numeric($siswa_scores[$mp->nama_mata_pelajaran])) {
+                    $nilai_val = $siswa_scores[$mp->nama_mata_pelajaran];
+                    $templateProcessor->setValue('n_' . $clean_name, $nilai_val);
+                    if ($clean_name !== $clean_name_collapsed) {
+                        $templateProcessor->setValue('n_' . $clean_name_collapsed, $nilai_val);
+                    }
+                    if (!empty($mp->kode_mapel)) {
+                        $templateProcessor->setValue($mp->kode_mapel, $nilai_val);
+                    }
+                } else {
+                    $templateProcessor->setValue('n_' . $clean_name, '');
+                    if ($clean_name !== $clean_name_collapsed) {
+                        $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                    }
+                    if (!empty($mp->kode_mapel)) {
+                        $templateProcessor->setValue($mp->kode_mapel, '');
+                    }
                 }
             }
+
+            // Opsi: Tabel dinamis via ${tabel_nilai}
+            $table = new \PhpOffice\PhpWord\Element\Table([
+                'borderSize' => 6,
+                'borderColor' => '000000',
+                'cellMargin' => 80
+            ]);
+            $table->addRow();
+            $table->addCell(800)->addText("No", ['bold' => true]);
+            $table->addCell(6000)->addText("Mata Pelajaran", ['bold' => true]);
+            $table->addCell(1200)->addText("Nilai", ['bold' => true]);
+
+            $no_table = 1;
+            foreach ($nilai_siswa as $n) {
+                if (is_numeric($n->nilai)) {
+                    $table->addRow();
+                    $table->addCell(800)->addText($no_table++);
+                    $table->addCell(6000)->addText($n->nama_mata_pelajaran);
+                    $table->addCell(1200)->addText(number_format((float)$n->nilai, 2));
+                }
+            }
+            $templateProcessor->setComplexValue('tabel_nilai', $table);
 
             // Gunakan rich text untuk status lulus / tidak lulus
             $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();

@@ -6,7 +6,7 @@ class Mata_pelajaran_model extends CI_Model {
     public function get_all() {
         $this->db->select('mata_pelajaran.*, jurusan.jurusan');
         $this->db->from('mata_pelajaran');
-        $this->db->join('jurusan', 'jurusan.id = mata_pelajaran.jurusan_id');
+        $this->db->join('jurusan', 'jurusan.id = mata_pelajaran.jurusan_id', 'left');
         return $this->db->get()->result();
     }
 

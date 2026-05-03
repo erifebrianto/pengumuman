@@ -22,7 +22,8 @@ class Mata_pelajaran extends CI_Controller {
         if ($this->input->post()) {
             $data = [
                 'jurusan_id' => $this->input->post('jurusan_id'),
-                'nama_mata_pelajaran' => $this->input->post('nama_mata_pelajaran')
+                'nama_mata_pelajaran' => $this->input->post('nama_mata_pelajaran'),
+                'kode_mapel' => $this->input->post('kode_mapel')
             ];
             $this->Mata_pelajaran_model->create($data);
             redirect('mata_pelajaran');
@@ -38,7 +39,8 @@ class Mata_pelajaran extends CI_Controller {
         if ($this->input->post()) {
             $data = [
                 'jurusan_id' => $this->input->post('jurusan_id'),
-                'nama_mata_pelajaran' => $this->input->post('nama_mata_pelajaran')
+                'nama_mata_pelajaran' => $this->input->post('nama_mata_pelajaran'),
+                'kode_mapel' => $this->input->post('kode_mapel')
             ];
             $this->Mata_pelajaran_model->update($id, $data);
             redirect('mata_pelajaran');

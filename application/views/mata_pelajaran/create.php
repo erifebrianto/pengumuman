@@ -19,7 +19,12 @@
             </div>
             <div class="mb-3">
                 <label for="nama_mata_pelajaran" class="form-label">Nama Mata Pelajaran</label>
-                <input type="text" name="nama_mata_pelajaran" class="form-control" required>
+                <input type="text" name="nama_mata_pelajaran" class="form-control" placeholder="Contoh: Seni Budaya" required>
+            </div>
+            <div class="mb-3">
+                <label for="kode_mapel" class="form-label">Kode/Variabel di Template Word (Sifatnya Opsional)</label>
+                <input type="text" name="kode_mapel" class="form-control" placeholder="Contoh: n_seni">
+                <small class="text-muted">Jika dikosongkan, sistem akan mengotomatiskan atau mencocokkan dari alias mapel standar.</small>
             </div>
             <button type="submit" class="btn btn-primary">Simpan</button>
             <a href="<?= base_url('mata_pelajaran') ?>" class="btn btn-secondary">Kembali</a>

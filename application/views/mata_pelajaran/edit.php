@@ -7,7 +7,7 @@
             </div>
         </div>
 
-        <form method="post" action="<?= base_url('mata_pelajaran/update/' . $mata_pelajaran->id) ?>">
+        <form method="post" action="<?= base_url('mata_pelajaran/edit/' . $mata_pelajaran->id) ?>">
             <div class="mb-3">
                 <label for="jurusan_id" class="form-label">Jurusan</label>
                 <select name="jurusan_id" class="form-control" required>
@@ -22,6 +22,11 @@
             <div class="mb-3">
                 <label for="nama_mata_pelajaran" class="form-label">Nama Mata Pelajaran</label>
                 <input type="text" name="nama_mata_pelajaran" class="form-control" value="<?= $mata_pelajaran->nama_mata_pelajaran ?>" required>
+            </div>
+            <div class="mb-3">
+                <label for="kode_mapel" class="form-label">Kode/Variabel di Template Word (Sifatnya Opsional)</label>
+                <input type="text" name="kode_mapel" class="form-control" value="<?= $mata_pelajaran->kode_mapel ?>" placeholder="Contoh: n_seni">
+                <small class="text-muted">Jika dikosongkan, sistem akan mengotomatiskan atau mencocokkan dari alias mapel standar.</small>
             </div>
             <button type="submit" class="btn btn-success">Update</button>
             <a href="<?= base_url('mata_pelajaran') ?>" class="btn btn-secondary">Kembali</a>

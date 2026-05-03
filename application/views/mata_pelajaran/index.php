@@ -15,8 +15,8 @@
                 <thead class="thead-light">
                     <tr>
                         <th>No</th>
-                        <th>Jurusan</th>
                         <th>Nama Mata Pelajaran</th>
+                        <th>Kode/Variabel Word</th>
                         <th style="width: 150px;">Aksi</th>
                     </tr>
                 </thead>
@@ -25,8 +25,8 @@
                         <?php foreach ($mata_pelajaran as $index => $mp) : ?>
                             <tr>
                                 <td><?= $index + 1 ?></td>
-                                <td><?= $mp->jurusan ?></td>
                                 <td><?= $mp->nama_mata_pelajaran ?></td>
+                                <td><code><?= $mp->kode_mapel ?: '-' ?></code></td>
                                 <td>
                                     <a href="<?= base_url('mata_pelajaran/edit/' . $mp->id) ?>" class="btn btn-sm btn-warning">Edit</a>
                                     <a href="<?= base_url('mata_pelajaran/delete/' . $mp->id) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus?')">Hapus</a>
