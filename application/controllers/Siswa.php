@@ -81,6 +81,12 @@ class Siswa extends CI_Controller {
         $mapel = $this->Mata_pelajaran_model->get_by_jurusan($jurusan_id);
         echo json_encode($mapel);
     }
+    
+    public function delete_all() {
+        $this->Siswa_model->empty_data();
+        $this->session->set_flashdata('delete_success', "Berhasil menghapus seluruh data siswa dan nilainya.");
+        redirect('siswa');
+    }
     public function import()
     {
         $this->load->library('upload');

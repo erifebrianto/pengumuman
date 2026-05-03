@@ -11,6 +11,7 @@
         <button id="stopPdfBtn" onclick="stopPdfBatch()" class="btn btn-danger btn-round" style="display: none;"><i class="fas fa-stop-circle"></i> Stop Generate</button>
         <a href="<?php echo base_url();?>/siswa/create" class="btn btn-primary btn-round">Tambah Siswa</a>
         <a href="<?php echo base_url();?>/siswa/import" class="btn btn-success btn-round">Import</a>
+        <button onclick="confirmBulkDelete()" class="btn btn-danger btn-round"><i class="fas fa-trash-alt"></i> Hapus Semua Data</button>
         <a href="<?php echo base_url('skl/logs');?>" class="btn btn-secondary btn-round" target="_blank"><i class="fas fa-file-alt"></i> Lihat Log Proses</a>
       </div>
     </div>
@@ -144,6 +145,16 @@
       icon: 'success',
       title: 'Import Selesai',
       text: '<?= $this->session->flashdata('import_success'); ?>',
+      timer: 5000,
+      showConfirmButton: true
+    });
+    <?php endif; ?>
+
+    <?php if ($this->session->flashdata('delete_success')): ?>
+    Swal.fire({
+      icon: 'success',
+      title: 'Penghapusan Berhasil',
+      text: '<?= $this->session->flashdata('delete_success'); ?>',
       timer: 5000,
       showConfirmButton: true
     });
@@ -285,6 +296,23 @@
               }
           });
       }
+  }
+
+  function confirmBulkDelete() {
+      Swal.fire({
+          title: 'Hapus Semua Data?',
+          text: "Anda akan menghapus SELURUH data siswa beserta nilainya. Aksi ini tidak dapat dibatalkan!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Ya, Hapus Semua!',
+          cancelButtonText: 'Batal'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              window.location.href = "<?= base_url('siswa/delete_all') ?>";
+          }
+      });
   }
 
   // Check on load
