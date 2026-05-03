@@ -205,9 +205,17 @@ class Skl_generator extends CI_Controller {
             
             $tanggal_lahir_formatted = '-';
             if (!empty($siswa->tanggal_lahir) && $siswa->tanggal_lahir !== '-') {
-                $time = strtotime($siswa->tanggal_lahir);
+                $raw_date = str_replace('/', '-', $siswa->tanggal_lahir);
+                $time = strtotime($raw_date);
                 if ($time) {
-                    $tanggal_lahir_formatted = date('d-m-Y', $time);
+                    $months = [
+                        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    ];
+                    $d = date('d', $time);
+                    $m = (int)date('m', $time);
+                    $y = date('Y', $time);
+                    $tanggal_lahir_formatted = $d . ' ' . $months[$m] . ' ' . $y;
                 } else {
                     $tanggal_lahir_formatted = $siswa->tanggal_lahir;
                 }

@@ -206,7 +206,24 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('kelas', $siswa->kelas);
             $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
             $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
-            $templateProcessor->setValue('tanggal_lahir', $siswa->tanggal_lahir ?? '-');
+            $tanggal_lahir_formatted = '-';
+            if (!empty($siswa->tanggal_lahir) && $siswa->tanggal_lahir !== '-') {
+                $raw_date = str_replace('/', '-', $siswa->tanggal_lahir);
+                $time = strtotime($raw_date);
+                if ($time) {
+                    $months = [
+                        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    ];
+                    $d = date('d', $time);
+                    $m = (int)date('m', $time);
+                    $y = date('Y', $time);
+                    $tanggal_lahir_formatted = $d . ' ' . $months[$m] . ' ' . $y;
+                } else {
+                    $tanggal_lahir_formatted = $siswa->tanggal_lahir;
+                }
+            }
+            $templateProcessor->setValue('tanggal_lahir', $tanggal_lahir_formatted);
             $templateProcessor->setValue('nisn', $siswa->nisn ?? '-');
             $templateProcessor->setValue('kurikulum', $siswa->kurikulum ?? '-');
             $templateProcessor->setValue('program_keahlian', $siswa->program_keahlian ?? '-');
@@ -420,7 +437,24 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('kelas', $siswa->kelas);
             $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
             $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
-            $templateProcessor->setValue('tanggal_lahir', $siswa->tanggal_lahir ?? '-');
+            $tanggal_lahir_formatted = '-';
+            if (!empty($siswa->tanggal_lahir) && $siswa->tanggal_lahir !== '-') {
+                $raw_date = str_replace('/', '-', $siswa->tanggal_lahir);
+                $time = strtotime($raw_date);
+                if ($time) {
+                    $months = [
+                        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    ];
+                    $d = date('d', $time);
+                    $m = (int)date('m', $time);
+                    $y = date('Y', $time);
+                    $tanggal_lahir_formatted = $d . ' ' . $months[$m] . ' ' . $y;
+                } else {
+                    $tanggal_lahir_formatted = $siswa->tanggal_lahir;
+                }
+            }
+            $templateProcessor->setValue('tanggal_lahir', $tanggal_lahir_formatted);
             $templateProcessor->setValue('nisn', $siswa->nisn ?? '-');
             $templateProcessor->setValue('kurikulum', $siswa->kurikulum ?? '-');
             $templateProcessor->setValue('program_keahlian', $siswa->program_keahlian ?? '-');
