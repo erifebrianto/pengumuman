@@ -13,8 +13,8 @@ class Skl extends CI_Controller {
         parent::__construct();
         $this->load->model('Siswa_model');
         $this->load->model('Countdown_model');
-        // Convert enum to varchar
         $this->db->query("ALTER TABLE pengaturan MODIFY verification_method varchar(255) DEFAULT 'exam_number_nis'");
+        $this->db->query("ALTER TABLE siswa MODIFY rata_rata decimal(5,2) DEFAULT NULL");
     }
 
     public function search()
@@ -192,7 +192,7 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', $siswa->rata_rata ?? '-');
+            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
 
             // School Setting Variables
             $this->load->model('Setting_model');
@@ -341,7 +341,7 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', $siswa->rata_rata ?? '-');
+            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
 
             // School Setting Variables
             $this->load->model('Setting_model');

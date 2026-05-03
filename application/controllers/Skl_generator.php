@@ -208,7 +208,7 @@ class Skl_generator extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', $siswa->rata_rata ?? '-');
+            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
 
             // School Setting Variables
             $this->load->model('Setting_model');
