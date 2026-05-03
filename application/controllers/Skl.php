@@ -213,6 +213,7 @@ class Skl extends CI_Controller {
 
             // Generate Word
             $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('no_surat', $siswa->no_surat ?? '-');
             $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
             $templateProcessor->setValue('nis', $siswa->nis);
             $templateProcessor->setValue('kelas', $siswa->kelas);
@@ -259,12 +260,28 @@ class Skl extends CI_Controller {
                         $templateProcessor->setValue($mp->kode_mapel, $nilai_val);
                     }
                 } else {
-                    $templateProcessor->setValue('n_' . $clean_name, '');
-                    if ($clean_name !== $clean_name_collapsed) {
-                        $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                    try {
+                        $templateProcessor->deleteRow('n_' . $clean_name);
+                    } catch (Exception $e) {
+                        $templateProcessor->setValue('n_' . $clean_name, '');
                     }
-                    if (!empty($mp->kode_mapel)) {
-                        $templateProcessor->setValue($mp->kode_mapel, '');
+                    try {
+                        if ($clean_name !== $clean_name_collapsed) {
+                            $templateProcessor->deleteRow('n_' . $clean_name_collapsed);
+                        }
+                    } catch (Exception $e) {
+                        if ($clean_name !== $clean_name_collapsed) {
+                            $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                        }
+                    }
+                    try {
+                        if (!empty($mp->kode_mapel)) {
+                            $templateProcessor->deleteRow($mp->kode_mapel);
+                        }
+                    } catch (Exception $e) {
+                        if (!empty($mp->kode_mapel)) {
+                            $templateProcessor->setValue($mp->kode_mapel, '');
+                        }
                     }
                 }
             }
@@ -304,8 +321,36 @@ class Skl extends CI_Controller {
                 $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
             }
 
-            // Set ke template
-            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+            // Perbaiki nomor urut tabel (re-numbering)
+            $reflection = new ReflectionClass($templateProcessor);
+            $property = $reflection->getProperty('tempDocumentMainPart');
+            $property->setAccessible(true);
+            $xml = $property->getValue($templateProcessor);
+
+            if (preg_match_all('/<w:tr[^>]*>.*?<\/w:tr>/is', $xml, $matches)) {
+                $current_expected = 1;
+                $has_numbering = false;
+                foreach ($matches[0] as $index => $row_xml) {
+                    if (preg_match('/<w:tc[^>]*>.*?<\/w:tc>/is', $row_xml, $cell_match)) {
+                        $first_cell = $cell_match[0];
+                        if (preg_match('/<w:t[^>]*>([1-9]|[12][0-9]|30)\s*\.?\s*<\/w:t>/is', $first_cell, $num_match)) {
+                            $num = intval($num_match[1]);
+                            if ($has_numbering && $num <= $current_expected) {
+                                $current_expected = $num;
+                            }
+                            $has_numbering = true;
+                            if ($num != $current_expected) {
+                                $new_cell = preg_replace('/(<w:t[^>]*>)[1-9]([0-9])?(\s*\.?\s*<\/w:t>)/is', '${1}' . $current_expected . '${3}', $first_cell, 1);
+                                $new_row = str_replace($first_cell, $new_cell, $row_xml);
+                                $xml = str_replace($row_xml, $new_row, $xml);
+                                $matches[0][$index] = $new_row;
+                            }
+                            $current_expected++;
+                        }
+                    }
+                }
+                $property->setValue($templateProcessor, $xml);
+            }
 
             $templateProcessor->saveAs($docxPath);
 
@@ -382,6 +427,7 @@ class Skl extends CI_Controller {
 
             // Generate Word
             $templateProcessor = new TemplateProcessor($templatePath);
+            $templateProcessor->setValue('no_surat', $siswa->no_surat ?? '-');
             $templateProcessor->setValue('nama_lengkap', $siswa->nama_lengkap);
             $templateProcessor->setValue('nis', $siswa->nis);
             $templateProcessor->setValue('kelas', $siswa->kelas);
@@ -428,12 +474,28 @@ class Skl extends CI_Controller {
                         $templateProcessor->setValue($mp->kode_mapel, $nilai_val);
                     }
                 } else {
-                    $templateProcessor->setValue('n_' . $clean_name, '');
-                    if ($clean_name !== $clean_name_collapsed) {
-                        $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                    try {
+                        $templateProcessor->deleteRow('n_' . $clean_name);
+                    } catch (Exception $e) {
+                        $templateProcessor->setValue('n_' . $clean_name, '');
                     }
-                    if (!empty($mp->kode_mapel)) {
-                        $templateProcessor->setValue($mp->kode_mapel, '');
+                    try {
+                        if ($clean_name !== $clean_name_collapsed) {
+                            $templateProcessor->deleteRow('n_' . $clean_name_collapsed);
+                        }
+                    } catch (Exception $e) {
+                        if ($clean_name !== $clean_name_collapsed) {
+                            $templateProcessor->setValue('n_' . $clean_name_collapsed, '');
+                        }
+                    }
+                    try {
+                        if (!empty($mp->kode_mapel)) {
+                            $templateProcessor->deleteRow($mp->kode_mapel);
+                        }
+                    } catch (Exception $e) {
+                        if (!empty($mp->kode_mapel)) {
+                            $templateProcessor->setValue($mp->kode_mapel, '');
+                        }
                     }
                 }
             }
@@ -473,8 +535,36 @@ class Skl extends CI_Controller {
                 $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
             }
 
-            // Set ke template
-            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+            // Perbaiki nomor urut tabel (re-numbering)
+            $reflection = new ReflectionClass($templateProcessor);
+            $property = $reflection->getProperty('tempDocumentMainPart');
+            $property->setAccessible(true);
+            $xml = $property->getValue($templateProcessor);
+
+            if (preg_match_all('/<w:tr[^>]*>.*?<\/w:tr>/is', $xml, $matches)) {
+                $current_expected = 1;
+                $has_numbering = false;
+                foreach ($matches[0] as $index => $row_xml) {
+                    if (preg_match('/<w:tc[^>]*>.*?<\/w:tc>/is', $row_xml, $cell_match)) {
+                        $first_cell = $cell_match[0];
+                        if (preg_match('/<w:t[^>]*>([1-9]|[12][0-9]|30)\s*\.?\s*<\/w:t>/is', $first_cell, $num_match)) {
+                            $num = intval($num_match[1]);
+                            if ($has_numbering && $num <= $current_expected) {
+                                $current_expected = $num;
+                            }
+                            $has_numbering = true;
+                            if ($num != $current_expected) {
+                                $new_cell = preg_replace('/(<w:t[^>]*>)[1-9]([0-9])?(\s*\.?\s*<\/w:t>)/is', '${1}' . $current_expected . '${3}', $first_cell, 1);
+                                $new_row = str_replace($first_cell, $new_cell, $row_xml);
+                                $xml = str_replace($row_xml, $new_row, $xml);
+                                $matches[0][$index] = $new_row;
+                            }
+                            $current_expected++;
+                        }
+                    }
+                }
+                $property->setValue($templateProcessor, $xml);
+            }
 
             $templateProcessor->saveAs($docxPath);
 

@@ -47,6 +47,7 @@ class Siswa extends CI_Controller {
         if ($this->input->post()) {
             $siswa_data = [
                 'user_id'        => $this->session->userdata('user_id'),
+                'no_surat'       => $this->input->post('no_surat'),
                 'nama_lengkap'   => $this->input->post('nama_lengkap'),
                 'tempat_lahir'   => $this->input->post('tempat_lahir'),
                 'tanggal_lahir'  => $this->input->post('tanggal_lahir'),
@@ -146,6 +147,7 @@ class Siswa extends CI_Controller {
 
                 // Identify basic info based on SKL Format
                 $siswa = [
+                    'no_surat'             => $mapped_row['Nomer Surat'] ?? $mapped_row['Nomor Surat'] ?? $mapped_row['No Surat'] ?? null,
                     'nama_lengkap'         => $mapped_row['Nama Lengkap Siswa'] ?? $mapped_row['Nama Lengkap'] ?? $mapped_row['Nama'] ?? null,
                     'nis'                  => $mapped_row['Nomor Induk Siswa'] ?? $mapped_row['NIS'] ?? null,
                     'nisn'                 => $mapped_row['NISN'] ?? null,
@@ -163,7 +165,7 @@ class Siswa extends CI_Controller {
 
                 // Fields used for basic student details
                 $siswa_fields = [
-                    'No', 'Nama Lengkap Siswa', 'Nama Lengkap', 'Nama', 'Nomor Induk Siswa', 'NIS', 'NISN',
+                    'Nomer Surat', 'Nomor Surat', 'No Surat', 'No', 'Nama Lengkap Siswa', 'Nama Lengkap', 'Nama', 'Nomor Induk Siswa', 'NIS', 'NISN',
                     'Kelas Siswa', 'Kelas', 'Nomor Ujian', 'No Ujian', 'Tempat Lahir', 'Tanggal Lahir',
                     'Status Lulus', 'Status', 'Keterangan', 'Kurikulum', 'Program Keahlian',
                     'Konsentrasi Keahlian', 'Tanggal Kelulusan', 'Nomor Ijazah', 'No Ijazah'
@@ -227,6 +229,7 @@ class Siswa extends CI_Controller {
 
                 $siswa_data = [
                     'user_id'              => $this->session->userdata('user_id'),
+                    'no_surat'             => $row['no_surat'] ?? null,
                     'nama_lengkap'         => $row['nama_lengkap'],
                     'tempat_lahir'         => $row['tempat_lahir'],
                     'tanggal_lahir'        => $row['tanggal_lahir'],

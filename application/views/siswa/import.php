@@ -15,9 +15,14 @@
       <!-- Kolom Panduan & Template -->
       <div class="col-md-5">
         <div class="card h-100">
-          <div class="card-header">
-            <h4 class="card-title"><i class="fas fa-file-excel text-success"></i> Template Import</h4>
-            <div class="card-category">Unduh dan isi template sebelum upload.</div>
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="card-title"><i class="fas fa-file-excel text-success"></i> Template Import</h4>
+              <div class="card-category">Unduh dan isi template sebelum upload.</div>
+            </div>
+            <a href="<?= base_url('template/template_import.xlsx') ?>" class="btn btn-success btn-sm btn-round" download>
+              <i class="fas fa-download"></i> Unduh
+            </a>
           </div>
           <div class="card-body">
             <div class="alert alert-info">Buat file Excel (.xlsx) baru dengan nama header kolom (baris pertama) persis seperti "Isi" di bawah ini.</div>
