@@ -355,7 +355,11 @@ class Skl extends CI_Controller {
             if ($isWindows) {
                 $sofficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
-                exec($cmd, $output, $returnCode);
+                if (function_exists('exec')) {
+                    @exec($cmd, $output, $returnCode);
+                } else {
+                    $returnCode = 1;
+                }
             } else {
                 if (file_exists('/Applications/LibreOffice.app/Contents/MacOS/soffice')) {
                     $sofficeOptPath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
@@ -372,12 +376,12 @@ class Skl extends CI_Controller {
                 
                 $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";
                 
-                $outputStr = shell_exec($cmd);
-                $returnCode = ($outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
+                $outputStr = $this->safe_shell_exec($cmd);
+                $returnCode = ($outputStr === false || $outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
 
                 // Cleanup temporary background LibreOffice profile
                 if (is_dir($loProfile)) {
-                    shell_exec("rm -rf " . escapeshellarg($loProfile));
+                    $this->safe_shell_exec("rm -rf " . escapeshellarg($loProfile));
                 }
             }
 
@@ -565,7 +569,11 @@ class Skl extends CI_Controller {
             if ($isWindows) {
                 $sofficePath = '"C:\Program Files\LibreOffice\program\soffice.exe"';
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
-                exec($cmd, $output, $returnCode);
+                if (function_exists('exec')) {
+                    @exec($cmd, $output, $returnCode);
+                } else {
+                    $returnCode = 1;
+                }
             } else {
                 if (file_exists('/Applications/LibreOffice.app/Contents/MacOS/soffice')) {
                     $sofficeOptPath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
@@ -582,12 +590,12 @@ class Skl extends CI_Controller {
                 
                 $cmd = "env LD_LIBRARY_PATH=\"\" " . escapeshellcmd($sofficeOptPath) . " -env:UserInstallation=file://" . escapeshellarg($loProfile) . " --headless --invisible --nologo --nodefault --convert-to pdf " . escapeshellarg($docxPath) . " --outdir " . escapeshellarg(FCPATH . 'temp/') . " 2>&1";
                 
-                $outputStr = shell_exec($cmd);
-                $returnCode = ($outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
+                $outputStr = $this->safe_shell_exec($cmd);
+                $returnCode = ($outputStr === false || $outputStr === null || strpos($outputStr, 'Error') !== false) ? 1 : 0;
 
                 // Cleanup temporary background LibreOffice profile
                 if (is_dir($loProfile)) {
-                    shell_exec("rm -rf " . escapeshellarg($loProfile));
+                    $this->safe_shell_exec("rm -rf " . escapeshellarg($loProfile));
                 }
             }
 
@@ -694,5 +702,24 @@ class Skl extends CI_Controller {
         $this->load->view('templates/header');
         $this->load->view('skl/logs', $data);
         $this->load->view('templates/footer');
+    }
+
+    private function safe_shell_exec($cmd)
+    {
+        if (function_exists('shell_exec')) {
+            return @shell_exec($cmd);
+        } elseif (function_exists('exec')) {
+            @exec($cmd, $outputArray);
+            return implode("\n", $outputArray);
+        } elseif (function_exists('system')) {
+            ob_start();
+            @system($cmd);
+            return ob_get_clean();
+        } elseif (function_exists('passthru')) {
+            ob_start();
+            @passthru($cmd);
+            return ob_get_clean();
+        }
+        return false;
     }
 }
