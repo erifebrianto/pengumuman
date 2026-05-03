@@ -18,7 +18,6 @@ class Skl extends CI_Controller {
 
         $short_map = [
             'Pendidikan Agama Islam dan Budi Pekerti' => 'n_agama',
-            'Pendidikan Agama dan Budi Pekerti' => 'n_agama',
             'Pendidikan Pancasila' => 'n_pancasila',
             'Bahasa Indonesia' => 'n_indonesia',
             'Pendidikan Jasmani, Olahraga dan Kesehatan' => 'n_pjok',
@@ -194,18 +193,6 @@ class Skl extends CI_Controller {
     {
         $siswa = $this->Siswa_model->get_by_token($token);
         if ($siswa) {
-            // Optimasi: Cek apakah PDF hasil batch generate sudah ada
-            $tahun = date('Y');
-            $preGeneratedPdf = FCPATH . "uploads/pengumuman/{$tahun}/skl_{$siswa->nis}.pdf";
-            
-            if (file_exists($preGeneratedPdf)) {
-                $this->load->helper('download');
-                $data = file_get_contents($preGeneratedPdf);
-                $name = 'SKL_' . $siswa->nis . '.pdf';
-                force_download($name, $data);
-                return;
-            }
-
             // Path
             $templatePath = FCPATH . 'template/skl_template.docx';
             $docxPath = FCPATH . 'temp/skl_' . $siswa->nis . '.docx';
@@ -226,8 +213,6 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
-
             // School Setting Variables
             $this->load->model('Setting_model');
             $pengaturan = $this->Setting_model->get_first();
@@ -242,8 +227,18 @@ class Skl extends CI_Controller {
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
             $siswa_scores = [];
             foreach ($nilai_siswa as $n) {
-                $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                if (is_numeric($n->nilai)) {
+                    $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                }
             }
+            $total_nilai = 0;
+            $count_mapel = 0;
+            foreach ($siswa_scores as $nama_mapel => $nilai_angka) {
+                $total_nilai += (float)$nilai_angka;
+                $count_mapel++;
+            }
+            $rata_rata_siswa = ($count_mapel > 0) ? ($total_nilai / $count_mapel) : 0;
+            $templateProcessor->setValue('rata_rata', number_format($rata_rata_siswa, 2));
 
             $all_mapel = $this->db->get('mata_pelajaran')->result();
             foreach ($all_mapel as $mp) {
@@ -408,18 +403,6 @@ class Skl extends CI_Controller {
     {
         $siswa = $this->Siswa_model->get_by_token($token);
         if ($siswa) {
-            // Optimasi: Cek apakah PDF hasil batch generate sudah ada
-            $tahun = date('Y');
-            $preGeneratedPdf = FCPATH . "uploads/pengumuman/{$tahun}/skl_{$siswa->nis}.pdf";
-            
-            if (file_exists($preGeneratedPdf)) {
-                $this->load->helper('download');
-                $data = file_get_contents($preGeneratedPdf);
-                $name = 'SKL_WA_' . $siswa->nis . '.pdf';
-                force_download($name, $data);
-                return;
-            }
-
             // Path
             $templatePath = FCPATH . 'template/skl_template.docx';
             $docxPath = FCPATH . 'temp/skl_wa_' . $siswa->nis . '.docx';
@@ -440,8 +423,6 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
-
             // School Setting Variables
             $this->load->model('Setting_model');
             $pengaturan = $this->Setting_model->get_first();
@@ -456,8 +437,18 @@ class Skl extends CI_Controller {
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
             $siswa_scores = [];
             foreach ($nilai_siswa as $n) {
-                $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                if (is_numeric($n->nilai)) {
+                    $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                }
             }
+            $total_nilai = 0;
+            $count_mapel = 0;
+            foreach ($siswa_scores as $nama_mapel => $nilai_angka) {
+                $total_nilai += (float)$nilai_angka;
+                $count_mapel++;
+            }
+            $rata_rata_siswa = ($count_mapel > 0) ? ($total_nilai / $count_mapel) : 0;
+            $templateProcessor->setValue('rata_rata', number_format($rata_rata_siswa, 2));
 
             $all_mapel = $this->db->get('mata_pelajaran')->result();
             foreach ($all_mapel as $mp) {

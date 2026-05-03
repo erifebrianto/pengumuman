@@ -219,8 +219,6 @@ class Skl_generator extends CI_Controller {
             $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
             $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
             $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
-            $templateProcessor->setValue('rata_rata', isset($siswa->rata_rata) ? number_format((float)$siswa->rata_rata, 2) : '-');
-
             // School Setting Variables
             $this->load->model('Setting_model');
             $pengaturan = $this->Setting_model->get_first();
@@ -235,8 +233,18 @@ class Skl_generator extends CI_Controller {
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
             $siswa_scores = [];
             foreach ($nilai_siswa as $n) {
-                $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                if (is_numeric($n->nilai)) {
+                    $siswa_scores[$n->nama_mata_pelajaran] = $n->nilai;
+                }
             }
+            $total_nilai = 0;
+            $count_mapel = 0;
+            foreach ($siswa_scores as $nama_mapel => $nilai_angka) {
+                $total_nilai += (float)$nilai_angka;
+                $count_mapel++;
+            }
+            $rata_rata_siswa = ($count_mapel > 0) ? ($total_nilai / $count_mapel) : 0;
+            $templateProcessor->setValue('rata_rata', number_format($rata_rata_siswa, 2));
 
             $all_mapel = $this->db->get('mata_pelajaran')->result();
             foreach ($all_mapel as $mp) {

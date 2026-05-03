@@ -197,8 +197,9 @@ class Siswa extends CI_Controller {
                 // Normalize mapping for subjects
                 $subject_mappings = [
                     'Konsentrasi Keahlian_subject' => 'Konsentrasi Keahlian',
-                    'Pendidikan Agama' => 'Pendidikan Agama dan Budi Pekerti',
-                    'Pendidikan Agama Islam' => 'Pendidikan Agama dan Budi Pekerti',
+                    'Pendidikan Agama' => 'Pendidikan Agama Islam dan Budi Pekerti',
+                    'Pendidikan Agama Islam' => 'Pendidikan Agama Islam dan Budi Pekerti',
+                    'Pendidikan Agama dan Budi Pekerti' => 'Pendidikan Agama Islam dan Budi Pekerti',
                     'PJOK' => 'Pendidikan Jasmani, Olahraga dan Kesehatan',
                     'Projek IPAS' => 'Projek Ilmu Pengetahuan Alam dan Sosial',
                     'Dasar Program Keahlian' => 'Dasar-dasar Program Keahlian',
@@ -239,16 +240,6 @@ class Siswa extends CI_Controller {
             foreach ($preview as $row) {
                 // Parse scores and calculate average
                 $scores = $row['nilai'] ?? [];
-                $total_nilai = 0;
-                $count_mapel = 0;
-
-                foreach ($scores as $nama_mapel => $nilai_angka) {
-                    if (is_numeric($nilai_angka)) {
-                        $total_nilai += floatval($nilai_angka);
-                        $count_mapel++;
-                    }
-                }
-                $rata_rata = ($count_mapel > 0) ? ($total_nilai / $count_mapel) : 0;
 
                 $siswa_data = [
                     'user_id'              => $this->session->userdata('user_id'),
@@ -266,9 +257,15 @@ class Siswa extends CI_Controller {
                     'konsentrasi_keahlian' => $row['konsentrasi_keahlian'] ?? null,
                     'tanggal_kelulusan'    => $row['tanggal_kelulusan'] ?? null,
                     'no_ijazah'            => $row['no_ijazah'] ?? null,
-                    'rata_rata'            => $rata_rata,
                     'created_at'           => date('Y-m-d H:i:s')
                 ];
+
+                // Clear cached pre-generated PDF
+                $tahun = date('Y');
+                $preGeneratedPdf = FCPATH . "uploads/pengumuman/{$tahun}/skl_" . $row['nis'] . ".pdf";
+                if (file_exists($preGeneratedPdf)) {
+                    @unlink($preGeneratedPdf);
+                }
 
                 // Cek if exists by NIS
                 $existing = $this->Siswa_model->get_by_nis($row['nis']);
