@@ -13,6 +13,8 @@ class Skl extends CI_Controller {
         parent::__construct();
         $this->load->model('Siswa_model');
         $this->load->model('Countdown_model');
+        // Convert enum to varchar
+        $this->db->query("ALTER TABLE pengaturan MODIFY verification_method varchar(255) DEFAULT 'exam_number_nis'");
     }
 
     public function search()
@@ -28,7 +30,12 @@ class Skl extends CI_Controller {
         $data['nama_sekolah'] = $pengaturan->nama_sekolah ?? 'Nama Sekolah';
         $data['logo_sekolah'] = $pengaturan->logo_sekolah ?? 'default_logo.png'; // fallback jika tidak ada
         $data['background'] = $pengaturan->background ?? '';
-        $data['verification_method'] = $pengaturan->verification_method ?? 'exam_number_nis';
+        
+        $method = $pengaturan->verification_method ?? 'exam_number_nis';
+        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis'])) {
+            $method = 'exam_number_nis';
+        }
+        $data['verification_method'] = $method;
 
         $this->load->view('skl/search', $data);
     }
@@ -38,39 +45,54 @@ class Skl extends CI_Controller {
         $this->load->model('Setting_model');
         $pengaturan = $this->Setting_model->get_first();
         $method = $pengaturan->verification_method ?? 'exam_number_nis';
+        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis'])) {
+            $method = 'exam_number_nis';
+        }
 
         $fields = [];
         $error_msg = 'Data tidak ditemukan! Pastikan data yang Anda masukkan benar.';
 
         switch ($method) {
+            case 'nis':
+                $nis = $this->input->post('nis');
+                if (empty($nis)) redirect('skl/search');
+                $fields = ['nis' => trim($nis)];
+                break;
             case 'nisn':
                 $nisn = $this->input->post('nisn');
                 if (empty($nisn)) redirect('skl/search');
-                $fields = ['nisn' => $nisn];
+                $fields = ['nisn' => trim($nisn)];
                 break;
-            case 'nisn_dob':
+            case 'nis_nisn':
+                $nis  = $this->input->post('nis');
                 $nisn = $this->input->post('nisn');
-                $dob  = $this->input->post('tanggal_lahir');
-                if (empty($nisn) || empty($dob)) redirect('skl/search');
-                $fields = ['nisn' => $nisn, 'tanggal_lahir' => $dob];
+                if (empty($nis) || empty($nisn)) redirect('skl/search');
+                $fields = ['nis' => trim($nis), 'nisn' => trim($nisn)];
                 break;
-            case 'exam_number':
-                $no_ujian = $this->input->post('no_ujian');
-                if (empty($no_ujian)) redirect('skl/search');
-                $fields = ['no_ujian' => $no_ujian];
-                break;
-            case 'exam_number_dob':
-                $no_ujian = $this->input->post('no_ujian');
-                $dob      = $this->input->post('tanggal_lahir');
-                if (empty($no_ujian) || empty($dob)) redirect('skl/search');
-                $fields = ['no_ujian' => $no_ujian, 'tanggal_lahir' => $dob];
+            case 'nis_nama':
+                $nis  = $this->input->post('nis');
+                $nama = $this->input->post('nama_lengkap');
+                if (empty($nis) || empty($nama)) redirect('skl/search');
+                $fields = ['nis' => trim($nis), 'nama_lengkap' => trim($nama)];
                 break;
             case 'exam_number_nis':
-            default:
                 $no_ujian = $this->input->post('no_ujian');
                 $nis      = $this->input->post('nis');
                 if (empty($no_ujian) || empty($nis)) redirect('skl/search');
-                $fields = ['no_ujian' => $no_ujian, 'nis' => $nis];
+                $fields = ['no_ujian' => trim($no_ujian), 'nis' => trim($nis)];
+                break;
+            case 'nisn_exam_number':
+                $nisn     = $this->input->post('nisn');
+                $no_ujian = $this->input->post('no_ujian');
+                if (empty($nisn) || empty($no_ujian)) redirect('skl/search');
+                $fields = ['nisn' => trim($nisn), 'no_ujian' => trim($no_ujian)];
+                break;
+            default:
+                // fallback to original enum options just in case
+                $no_ujian = $this->input->post('no_ujian');
+                $nis      = $this->input->post('nis');
+                if (empty($no_ujian) || empty($nis)) redirect('skl/search');
+                $fields = ['no_ujian' => trim($no_ujian), 'nis' => trim($nis)];
                 break;
         }
 

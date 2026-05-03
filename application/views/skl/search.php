@@ -51,7 +51,19 @@
 
         <!-- Nama Sekolah -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2"><?= $nama_sekolah ?></h2>
-        <p class="text-gray-500">Masukkan Nomor Ujian dan NIS untuk melihat kelulusan</p>
+        <p class="text-gray-500">
+          <?php 
+            switch($verification_method) {
+              case 'nis': echo 'Masukkan NIS Anda'; break;
+              case 'nisn': echo 'Masukkan NISN Anda'; break;
+              case 'nis_nisn': echo 'Masukkan NIS dan NISN Anda'; break;
+              case 'nis_nama': echo 'Masukkan NIS dan Nama Lengkap Anda'; break;
+              case 'exam_number_nis': echo 'Masukkan Nomor Ujian dan NIS Anda'; break;
+              case 'nisn_exam_number': echo 'Masukkan NISN dan Nomor Ujian Anda'; break;
+              default: echo 'Masukkan data Anda'; break;
+            }
+          ?>
+        </p>
       </div>
 
 
@@ -86,7 +98,7 @@
     <!-- Form Pencarian -->
     <form method="post" action="<?= base_url('skl/result') ?>" class="space-y-4 <?= (time() < $target_timestamp) ? 'hidden' : '' ?>" id="form-box">
         
-        <?php if (in_array($verification_method, ['exam_number', 'exam_number_nis', 'exam_number_dob'])): ?>
+        <?php if (in_array($verification_method, ['exam_number_nis', 'nisn_exam_number'])): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-123 text-gray-400"></i>
@@ -102,7 +114,7 @@
         </div>
         <?php endif; ?>
 
-        <?php if (in_array($verification_method, ['nisn', 'nisn_dob'])): ?>
+        <?php if (in_array($verification_method, ['nisn', 'nis_nisn', 'nisn_exam_number'])): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-person-vcard text-gray-400"></i>
@@ -120,7 +132,7 @@
         </div>
         <?php endif; ?>
 
-        <?php if ($verification_method == 'exam_number_nis'): ?>
+        <?php if (in_array($verification_method, ['nis', 'nis_nisn', 'nis_nama', 'exam_number_nis'])): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-person text-gray-400"></i>
@@ -138,17 +150,18 @@
         </div>
         <?php endif; ?>
 
-        <?php if (in_array($verification_method, ['exam_number_dob', 'nisn_dob'])): ?>
+        <?php if ($verification_method == 'nis_nama'): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="bi bi-calendar-event text-gray-400"></i>
+                <i class="bi bi-fonts text-gray-400"></i>
             </div>
             <input 
-                type="date" 
-                name="tanggal_lahir" 
+                type="text" 
+                name="nama_lengkap" 
                 class="input-focus-effect w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                placeholder="Masukkan Nama Lengkap" 
                 required
-                title="Pilih Tanggal Lahir Anda"
+                title="Masukkan Nama Lengkap Anda"
             >
         </div>
         <?php endif; ?>

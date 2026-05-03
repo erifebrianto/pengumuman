@@ -97,7 +97,7 @@
                   <ul class="nav nav-collapse">
                     <li>
                       <a href="<?= base_url('setting') ?>">
-                        <span class="sub-item">Data Sekolah</span>
+                        <span class="sub-item">Data Sekolah & Verifikasi</span>
                       </a>
                     </li>
                     <li>

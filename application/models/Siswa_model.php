@@ -55,7 +55,10 @@ class Siswa_model extends CI_Model {
 
     public function get_by_fields($fields)
     {
-        return $this->db->get_where('siswa', $fields)->row();
+        foreach ($fields as $key => $value) {
+            $this->db->where($key, trim($value));
+        }
+        return $this->db->get('siswa')->row();
     }
 
     public function get_by_token($token)

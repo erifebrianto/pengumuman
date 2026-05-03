@@ -83,11 +83,12 @@
                 <div class="form-group mb-3">
                     <label>Metode Verifikasi Login Siswa <span class="text-danger">*</span></label>
                     <select name="verification_method" class="form-control" required>
-                        <option value="nisn" <?= $pengaturan->verification_method == 'nisn' ? 'selected' : ''; ?>>Metode 1: NISN Saja</option>
-                        <option value="exam_number_nis" <?= $pengaturan->verification_method == 'exam_number_nis' ? 'selected' : ''; ?>>Metode 2: Nomor Ujian + NIS</option>
-                        <option value="exam_number_dob" <?= $pengaturan->verification_method == 'exam_number_dob' ? 'selected' : ''; ?>>Metode 3: Nomor Ujian + Tanggal Lahir</option>
-                        <option value="nisn_dob" <?= $pengaturan->verification_method == 'nisn_dob' ? 'selected' : ''; ?>>Metode 4: NISN + Tanggal Lahir</option>
-                        <option value="exam_number" <?= $pengaturan->verification_method == 'exam_number' ? 'selected' : ''; ?>>Metode 5: Nomor Ujian Saja</option>
+                        <option value="nis" <?= $pengaturan->verification_method == 'nis' ? 'selected' : ''; ?>>NIS</option>
+                        <option value="nisn" <?= $pengaturan->verification_method == 'nisn' ? 'selected' : ''; ?>>NISN</option>
+                        <option value="nis_nisn" <?= $pengaturan->verification_method == 'nis_nisn' ? 'selected' : ''; ?>>NIS + NISN</option>
+                        <option value="nis_nama" <?= $pengaturan->verification_method == 'nis_nama' ? 'selected' : ''; ?>>NIS + Nama SISWA</option>
+                        <option value="exam_number_nis" <?= $pengaturan->verification_method == 'exam_number_nis' ? 'selected' : ''; ?>>NOMER UJIAN + NIS</option>
+                        <option value="nisn_exam_number" <?= $pengaturan->verification_method == 'nisn_exam_number' ? 'selected' : ''; ?>>NISN + Nomer UJIAN</option>
                     </select>
                     <small class="form-text text-muted">Tentukan kolom apa saja yang harus diisi siswa untuk mengecek kelulusan.</small>
                 </div>

@@ -57,7 +57,7 @@
                 <th>Nama Lengkap</th>
                 <th>NO Ujian</th>
                 <th>NIS</th>
-                <th>No HP (WA)</th>
+                <th>NISN</th>
                 <th>Kelas</th>
                 <th>Status</th>
                 <th>Dibuat Pada</th>
@@ -72,7 +72,7 @@
                     <td><?= $row->nama_lengkap ?></td>
                     <td><?= $row->no_ujian ?></td>
                     <td><?= $row->nis ?></td>
-                    <td><?= $row->no_hp ?></td>
+                    <td><?= $row->nisn ?></td>
                     <td><?= $row->kelas ?></td>
                     <td>
                       <span class="badge bg-<?= $row->status == 'Lulus' ? 'success' : 'danger' ?>">
