@@ -202,7 +202,17 @@ class Skl_generator extends CI_Controller {
             $templateProcessor->setValue('kelas', $siswa->kelas);
             $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
             $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
-            $templateProcessor->setValue('tanggal_lahir', $siswa->tanggal_lahir ?? '-');
+            
+            $tanggal_lahir_formatted = '-';
+            if (!empty($siswa->tanggal_lahir) && $siswa->tanggal_lahir !== '-') {
+                $time = strtotime($siswa->tanggal_lahir);
+                if ($time) {
+                    $tanggal_lahir_formatted = date('d-m-Y', $time);
+                } else {
+                    $tanggal_lahir_formatted = $siswa->tanggal_lahir;
+                }
+            }
+            $templateProcessor->setValue('tanggal_lahir', $tanggal_lahir_formatted);
             $templateProcessor->setValue('nisn', $siswa->nisn ?? '-');
             $templateProcessor->setValue('kurikulum', $siswa->kurikulum ?? '-');
             $templateProcessor->setValue('program_keahlian', $siswa->program_keahlian ?? '-');

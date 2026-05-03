@@ -43,7 +43,7 @@
                         <td><?= $row['kelas'] ?></td>
                         <td><?= $row['no_ujian'] ?></td>
                         <td><?= $row['tempat_lahir'] ?></td>
-                        <td><?= $row['tanggal_lahir'] ?></td>
+                        <td><?= !empty($row['tanggal_lahir']) ? date('d-m-Y', strtotime($row['tanggal_lahir'])) : ($row['raw_tanggal_lahir'] ?? 'Kosong/Gagal Parse') ?></td>
                         <td><?= $row['status'] ?></td>
                     </tr>
                     <?php endforeach; ?>

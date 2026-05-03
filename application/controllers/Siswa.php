@@ -117,15 +117,21 @@ class Siswa extends CI_Controller {
                 foreach ($headers as $col_letter => $header_name) {
                     if ($header_name) {
                         $trimmed_header = trim($header_name);
+                        $normalized_header = strtolower(preg_replace('/\s+/', ' ', $trimmed_header));
+                        
                         if (isset($mapped_row[$trimmed_header])) {
                             $mapped_row[$trimmed_header . '_subject'] = isset($row[$col_letter]) ? $row[$col_letter] : null;
                         } else {
                             $mapped_row[$trimmed_header] = isset($row[$col_letter]) ? $row[$col_letter] : null;
                         }
+                        
+                        // Store normalized version for robust lookups
+                        $mapped_row['__norm_' . $normalized_header] = isset($row[$col_letter]) ? $row[$col_letter] : null;
                     }
                 }
 
-                $raw_tgl = $mapped_row['Tanggal Lahir'] ?? null;
+                // Coba ambil Tanggal Lahir dengan berbagai kemungkinan case
+                $raw_tgl = $mapped_row['Tanggal Lahir'] ?? $mapped_row['__norm_tanggal lahir'] ?? null;
                 $tanggal_lahir = null;
                 if (!empty($raw_tgl)) {
                     if (is_numeric($raw_tgl)) {
@@ -135,8 +141,18 @@ class Siswa extends CI_Controller {
                             $tanggal_lahir = null;
                         }
                     } else {
+                        // Handle Indonesian months
+                        $indonesian_months = [
+                            'Januari' => 'January', 'Februari' => 'February', 'Maret' => 'March',
+                            'April' => 'April', 'Mei' => 'May', 'Juni' => 'June', 'Juli' => 'July',
+                            'Agustus' => 'August', 'September' => 'September', 'Oktober' => 'October',
+                            'November' => 'November', 'Desember' => 'December',
+                            'Sept' => 'Sep', 'Okt' => 'Oct', 'Nov' => 'Nov', 'Des' => 'Dec'
+                        ];
+                        $raw_tgl_en = str_ireplace(array_keys($indonesian_months), array_values($indonesian_months), $raw_tgl);
+                        
                         // Ganti '/' dengan '-' agar format d/m/Y diproses dengan benar sebagai d-m-Y oleh strtotime
-                        $time = strtotime(str_replace('/', '-', $raw_tgl));
+                        $time = strtotime(str_replace('/', '-', $raw_tgl_en));
                         if ($time) {
                             $tanggal_lahir = date('Y-m-d', $time);
                         } else {
@@ -161,6 +177,7 @@ class Siswa extends CI_Controller {
                     'konsentrasi_keahlian' => $mapped_row['Konsentrasi Keahlian'] ?? null,
                     'tanggal_kelulusan'    => $mapped_row['Tanggal Kelulusan'] ?? null,
                     'no_ijazah'            => $mapped_row['Nomor Ijazah'] ?? $mapped_row['No Ijazah'] ?? null,
+                    'raw_tanggal_lahir'    => $raw_tgl,
                 ];
 
                 // Fields used for basic student details
