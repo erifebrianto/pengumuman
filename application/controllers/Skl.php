@@ -185,6 +185,31 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('kelas', $siswa->kelas);
             $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
             $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+            $templateProcessor->setValue('tanggal_lahir', $siswa->tanggal_lahir ?? '-');
+            $templateProcessor->setValue('nisn', $siswa->nisn ?? '-');
+            $templateProcessor->setValue('kurikulum', $siswa->kurikulum ?? '-');
+            $templateProcessor->setValue('program_keahlian', $siswa->program_keahlian ?? '-');
+            $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
+            $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
+            $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
+            $templateProcessor->setValue('rata_rata', $siswa->rata_rata ?? '-');
+
+            // School Setting Variables
+            $this->load->model('Setting_model');
+            $pengaturan = $this->Setting_model->get_first();
+            if ($pengaturan) {
+                $templateProcessor->setValue('nama_sekolah', $pengaturan->nama_sekolah ?? '-');
+                $templateProcessor->setValue('alamat_sekolah', $pengaturan->alamat_sekolah ?? '-');
+                $templateProcessor->setValue('nama_kepala_sekolah', $pengaturan->nama_kepala_sekolah ?? '-');
+            }
+
+            // Populate all available subject scores
+            $this->load->model('Nilai_model');
+            $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
+            foreach ($nilai_siswa as $n) {
+                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
+                $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
+            }
 
             // Gunakan rich text untuk status lulus / tidak lulus
             $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
@@ -212,7 +237,9 @@ class Skl extends CI_Controller {
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
                 exec($cmd, $output, $returnCode);
             } else {
-                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                if (file_exists('/Applications/LibreOffice.app/Contents/MacOS/soffice')) {
+                    $sofficeOptPath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
+                } elseif (file_exists('/opt/libreoffice6.4/program/soffice')) {
                     $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
                 } elseif (file_exists('/usr/bin/libreoffice')) {
                     $sofficeOptPath = '/usr/bin/libreoffice';
@@ -280,6 +307,31 @@ class Skl extends CI_Controller {
             $templateProcessor->setValue('kelas', $siswa->kelas);
             $templateProcessor->setValue('no_ujian', $siswa->no_ujian);
             $templateProcessor->setValue('tempat_lahir', $siswa->tempat_lahir ?? '-');
+            $templateProcessor->setValue('tanggal_lahir', $siswa->tanggal_lahir ?? '-');
+            $templateProcessor->setValue('nisn', $siswa->nisn ?? '-');
+            $templateProcessor->setValue('kurikulum', $siswa->kurikulum ?? '-');
+            $templateProcessor->setValue('program_keahlian', $siswa->program_keahlian ?? '-');
+            $templateProcessor->setValue('konsentrasi_keahlian', $siswa->konsentrasi_keahlian ?? '-');
+            $templateProcessor->setValue('tanggal_kelulusan', $siswa->tanggal_kelulusan ?? '-');
+            $templateProcessor->setValue('no_ijazah', $siswa->no_ijazah ?? '-');
+            $templateProcessor->setValue('rata_rata', $siswa->rata_rata ?? '-');
+
+            // School Setting Variables
+            $this->load->model('Setting_model');
+            $pengaturan = $this->Setting_model->get_first();
+            if ($pengaturan) {
+                $templateProcessor->setValue('nama_sekolah', $pengaturan->nama_sekolah ?? '-');
+                $templateProcessor->setValue('alamat_sekolah', $pengaturan->alamat_sekolah ?? '-');
+                $templateProcessor->setValue('nama_kepala_sekolah', $pengaturan->nama_kepala_sekolah ?? '-');
+            }
+
+            // Populate all available subject scores
+            $this->load->model('Nilai_model');
+            $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
+            foreach ($nilai_siswa as $n) {
+                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
+                $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
+            }
 
             // Gunakan rich text untuk status lulus / tidak lulus
             $statusRichText = new \PhpOffice\PhpWord\Element\TextRun();
@@ -307,7 +359,9 @@ class Skl extends CI_Controller {
                 $cmd = $sofficePath . ' --headless --convert-to pdf ' . escapeshellarg($docxPath) . ' --outdir ' . escapeshellarg(FCPATH . 'temp/');
                 exec($cmd, $output, $returnCode);
             } else {
-                if (file_exists('/opt/libreoffice6.4/program/soffice')) {
+                if (file_exists('/Applications/LibreOffice.app/Contents/MacOS/soffice')) {
+                    $sofficeOptPath = '/Applications/LibreOffice.app/Contents/MacOS/soffice';
+                } elseif (file_exists('/opt/libreoffice6.4/program/soffice')) {
                     $sofficeOptPath = '/opt/libreoffice6.4/program/soffice';
                 } elseif (file_exists('/usr/bin/libreoffice')) {
                     $sofficeOptPath = '/usr/bin/libreoffice';

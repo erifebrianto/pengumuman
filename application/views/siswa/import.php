@@ -48,17 +48,17 @@
       <div class="col-md-7">
         <div class="card h-100">
           <div class="card-header">
-            <h4 class="card-title"><i class="fas fa-upload text-primary"></i> Upload File Excel</h4>
-            <div class="card-category">Pilih file .xlsx yang sudah diisi sesuai template.</div>
+            <h4 class="card-title"><i class="fas fa-upload text-primary"></i> Upload File Excel / CSV</h4>
+            <div class="card-category">Pilih file .xlsx atau .csv yang sudah diisi sesuai template.</div>
           </div>
           <div class="card-body d-flex flex-column justify-content-center">
             <?php if (isset($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
 
             <?= form_open_multipart('siswa/import') ?>
             <div class="form-group">
-              <label for="file_excel" class="fw-bold">Pilih File Excel</label>
-              <input type="file" name="file_excel" id="file_excel" class="form-control" accept=".xls,.xlsx" required>
-              <small class="text-muted">Ukuran maksimal 2MB. Format: .xls atau .xlsx</small>
+              <label for="file_excel" class="fw-bold">Pilih File Excel / CSV</label>
+              <input type="file" name="file_excel" id="file_excel" class="form-control" accept=".xls,.xlsx,.csv" required>
+              <small class="text-muted">Ukuran maksimal 2MB. Format: .xls, .xlsx, atau .csv</small>
             </div>
             <div class="form-group mt-3">
               <button type="submit" class="btn btn-primary btn-lg w-100">

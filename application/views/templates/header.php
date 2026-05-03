@@ -88,6 +88,13 @@
               </li>
 
               <li class="nav-item">
+                <a href="<?= base_url('mata_pelajaran') ?>">
+                  <i class="fas fa-book"></i>
+                  <p>Mata Pelajaran</p>
+                </a>
+              </li>
+
+              <li class="nav-item">
                 <a data-bs-toggle="collapse" href="#pengaturan">
                   <i class="fas fa-cogs"></i>
                   <p>Pengaturan</p>

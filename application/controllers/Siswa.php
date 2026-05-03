@@ -85,7 +85,7 @@ class Siswa extends CI_Controller {
         $this->load->library('upload');
 
         $config['upload_path']   = './uploads/';
-        $config['allowed_types'] = 'xls|xlsx';
+        $config['allowed_types'] = 'xls|xlsx|csv';
         $config['max_size']      = 2048;
 
         $this->upload->initialize($config);
@@ -141,15 +141,51 @@ class Siswa extends CI_Controller {
 
                 // Identify basic info based on SKL Format
                 $siswa = [
-                    'nama_lengkap'  => $mapped_row['Nama Lengkap Siswa'] ?? $mapped_row['Nama Lengkap'] ?? $mapped_row['Nama'] ?? null,
-                    'nis'           => $mapped_row['Nomor Induk Siswa'] ?? $mapped_row['NIS'] ?? null,
-                    'nisn'          => $mapped_row['NISN'] ?? null,
-                    'kelas'         => $mapped_row['Kelas Siswa'] ?? $mapped_row['Kelas'] ?? null,
-                    'no_ujian'      => $mapped_row['Nomor Ujian'] ?? $mapped_row['No Ujian'] ?? null,
-                    'tempat_lahir'  => $mapped_row['Tempat Lahir'] ?? null,
-                    'tanggal_lahir' => $tanggal_lahir,
-                    'status'        => $mapped_row['Status Lulus'] ?? $mapped_row['Status'] ?? $mapped_row['Keterangan'] ?? null,
+                    'nama_lengkap'         => $mapped_row['Nama Lengkap Siswa'] ?? $mapped_row['Nama Lengkap'] ?? $mapped_row['Nama'] ?? null,
+                    'nis'                  => $mapped_row['Nomor Induk Siswa'] ?? $mapped_row['NIS'] ?? null,
+                    'nisn'                 => $mapped_row['NISN'] ?? null,
+                    'kelas'                => $mapped_row['Kelas Siswa'] ?? $mapped_row['Kelas'] ?? null,
+                    'no_ujian'             => $mapped_row['Nomor Ujian'] ?? $mapped_row['No Ujian'] ?? null,
+                    'tempat_lahir'         => $mapped_row['Tempat Lahir'] ?? null,
+                    'tanggal_lahir'        => $tanggal_lahir,
+                    'status'               => $mapped_row['Status Lulus'] ?? $mapped_row['Status'] ?? $mapped_row['Keterangan'] ?? null,
+                    'kurikulum'            => $mapped_row['Kurikulum'] ?? null,
+                    'program_keahlian'     => $mapped_row['Program Keahlian'] ?? null,
+                    'konsentrasi_keahlian' => $mapped_row['Konsentrasi Keahlian'] ?? null,
+                    'tanggal_kelulusan'    => $mapped_row['Tanggal Kelulusan'] ?? null,
+                    'no_ijazah'            => $mapped_row['Nomor Ijazah'] ?? $mapped_row['No Ijazah'] ?? null,
                 ];
+
+                // Fields used for basic student details
+                $siswa_fields = [
+                    'No', 'Nama Lengkap Siswa', 'Nama Lengkap', 'Nama', 'Nomor Induk Siswa', 'NIS', 'NISN',
+                    'Kelas Siswa', 'Kelas', 'Nomor Ujian', 'No Ujian', 'Tempat Lahir', 'Tanggal Lahir',
+                    'Status Lulus', 'Status', 'Keterangan', 'Kurikulum', 'Program Keahlian',
+                    'Konsentrasi Keahlian', 'Tanggal Kelulusan', 'Nomor Ijazah', 'No Ijazah'
+                ];
+
+                // Normalize mapping for subjects
+                $subject_mappings = [
+                    'Pendidikan Agama' => 'Pendidikan Agama dan Budi Pekerti',
+                    'Pendidikan Agama Islam' => 'Pendidikan Agama dan Budi Pekerti',
+                    'PJOK' => 'Pendidikan Jasmani, Olahraga dan Kesehatan',
+                    'Projek IPAS' => 'Projek Ilmu Pengetahuan Alam dan Sosial',
+                    'Dasar Program Keahlian' => 'Dasar-dasar Program Keahlian',
+                    'Kreativitas Inovasi dan Kewirausahaan' => 'Kreativitas, Inovasi, dan Kewirausahaan',
+                    'PKL' => 'Praktik Kerja Lapangan',
+                    'Mapel Pilihan' => 'Mata Pelajaran Pilihan'
+                ];
+
+                // Parsing dynamic subjects
+                $nilai = [];
+                foreach ($mapped_row as $header_name => $col_val) {
+                    if (!in_array($header_name, $siswa_fields) && !empty($header_name)) {
+                        $normalized_name = $subject_mappings[$header_name] ?? $header_name;
+                        $nilai[$normalized_name] = $col_val;
+                    }
+                }
+
+                $siswa['nilai'] = $nilai;
 
                 if (!empty($siswa['nis']) || !empty($siswa['nama_lengkap'])) {
                     $data['preview'][] = $siswa;
@@ -170,33 +206,77 @@ class Siswa extends CI_Controller {
             $berhasil = 0;
             $gagal = 0;
             foreach ($preview as $row) {
+                // Parse scores and calculate average
+                $scores = $row['nilai'] ?? [];
+                $total_nilai = 0;
+                $count_mapel = 0;
+
+                foreach ($scores as $nama_mapel => $nilai_angka) {
+                    if (is_numeric($nilai_angka)) {
+                        $total_nilai += floatval($nilai_angka);
+                        $count_mapel++;
+                    }
+                }
+                $rata_rata = ($count_mapel > 0) ? ($total_nilai / $count_mapel) : 0;
+
                 $siswa_data = [
-                    'user_id'       => $this->session->userdata('user_id'),
-                    'nama_lengkap'  => $row['nama_lengkap'],
-                    'tempat_lahir'  => $row['tempat_lahir'],
-                    'tanggal_lahir' => $row['tanggal_lahir'],
-                    'nis'           => $row['nis'],
-                    'nisn'          => $row['nisn'],
-                    'no_ujian'      => $row['no_ujian'],
-                    'kelas'         => $row['kelas'],
-                    'status'        => $row['status'],
-                    'created_at'    => date('Y-m-d H:i:s')
+                    'user_id'              => $this->session->userdata('user_id'),
+                    'nama_lengkap'         => $row['nama_lengkap'],
+                    'tempat_lahir'         => $row['tempat_lahir'],
+                    'tanggal_lahir'        => $row['tanggal_lahir'],
+                    'nis'                  => $row['nis'],
+                    'nisn'                 => $row['nisn'],
+                    'no_ujian'             => $row['no_ujian'],
+                    'kelas'                => $row['kelas'],
+                    'status'               => $row['status'],
+                    'kurikulum'            => $row['kurikulum'] ?? null,
+                    'program_keahlian'     => $row['program_keahlian'] ?? null,
+                    'konsentrasi_keahlian' => $row['konsentrasi_keahlian'] ?? null,
+                    'tanggal_kelulusan'    => $row['tanggal_kelulusan'] ?? null,
+                    'no_ijazah'            => $row['no_ijazah'] ?? null,
+                    'rata_rata'            => $rata_rata,
+                    'created_at'           => date('Y-m-d H:i:s')
                 ];
 
                 // Cek if exists by NIS
                 $existing = $this->Siswa_model->get_by_nis($row['nis']);
 
                 if ($existing) {
-                    if ($this->Siswa_model->update($existing->id, $siswa_data)) {
+                    $siswa_id = $existing->id;
+                    if ($this->Siswa_model->update($siswa_id, $siswa_data)) {
                         $berhasil++;
                     } else {
                         $gagal++;
                     }
                 } else {
-                    if ($this->Siswa_model->insert($siswa_data)) {
+                    $siswa_id = $this->Siswa_model->insert($siswa_data);
+                    if ($siswa_id) {
                         $berhasil++;
                     } else {
                         $gagal++;
+                    }
+                }
+
+                // Insert or update scores
+                if ($siswa_id) {
+                    $this->db->delete('nilai_siswa', ['siswa_id' => $siswa_id]);
+                    foreach ($scores as $nama_mapel => $nilai_angka) {
+                        if (is_numeric($nilai_angka)) {
+                            // Match existing subject or insert
+                            $mapel = $this->db->get_where('mata_pelajaran', ['nama_mata_pelajaran' => $nama_mapel])->row();
+                            if (!$mapel) {
+                                $this->db->insert('mata_pelajaran', ['nama_mata_pelajaran' => $nama_mapel]);
+                                $mapel_id = $this->db->insert_id();
+                            } else {
+                                $mapel_id = $mapel->id;
+                            }
+
+                            $this->db->insert('nilai_siswa', [
+                                'siswa_id' => $siswa_id,
+                                'mapel_id' => $mapel_id,
+                                'nilai'    => floatval($nilai_angka)
+                            ]);
+                        }
                     }
                 }
             }
@@ -254,7 +334,9 @@ class Siswa extends CI_Controller {
         } else {
             // Gunakan path PHP dinamis untuk Linux / hosting environment
             $php_bin = 'php';
-            if (file_exists('/usr/bin/php')) {
+            if (file_exists('/Applications/XAMPP/xamppfiles/bin/php')) {
+                $php_bin = '/Applications/XAMPP/xamppfiles/bin/php';
+            } elseif (file_exists('/usr/bin/php')) {
                 $php_bin = '/usr/bin/php';
             } elseif (file_exists('/usr/local/bin/php')) {
                 $php_bin = '/usr/local/bin/php';
@@ -262,7 +344,7 @@ class Siswa extends CI_Controller {
                 $php_bin = '/opt/lampp/bin/php';
             }
             
-            $cmd = "{$php_bin} " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode) . " > /dev/null 2>&1 &";
+            $cmd = "{$php_bin} " . escapeshellarg(FCPATH . "index.php") . " skl_generator generate_pengumuman_batch " . escapeshellarg($mode) . " >> " . escapeshellarg($log_file) . " 2>&1 &";
             
             $msg_cmd = "[{$date}] [INFO] Menjalankan command background: {$cmd}" . PHP_EOL;
             file_put_contents($log_file, $msg_cmd, FILE_APPEND);
