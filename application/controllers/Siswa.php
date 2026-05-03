@@ -115,7 +115,12 @@ class Siswa extends CI_Controller {
                 $mapped_row = [];
                 foreach ($headers as $col_letter => $header_name) {
                     if ($header_name) {
-                        $mapped_row[trim($header_name)] = isset($row[$col_letter]) ? $row[$col_letter] : null;
+                        $trimmed_header = trim($header_name);
+                        if (isset($mapped_row[$trimmed_header])) {
+                            $mapped_row[$trimmed_header . '_subject'] = isset($row[$col_letter]) ? $row[$col_letter] : null;
+                        } else {
+                            $mapped_row[$trimmed_header] = isset($row[$col_letter]) ? $row[$col_letter] : null;
+                        }
                     }
                 }
 
@@ -166,6 +171,7 @@ class Siswa extends CI_Controller {
 
                 // Normalize mapping for subjects
                 $subject_mappings = [
+                    'Konsentrasi Keahlian_subject' => 'Konsentrasi Keahlian',
                     'Pendidikan Agama' => 'Pendidikan Agama dan Budi Pekerti',
                     'Pendidikan Agama Islam' => 'Pendidikan Agama dan Budi Pekerti',
                     'PJOK' => 'Pendidikan Jasmani, Olahraga dan Kesehatan',

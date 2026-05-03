@@ -207,7 +207,7 @@ class Skl extends CI_Controller {
             $this->load->model('Nilai_model');
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
             foreach ($nilai_siswa as $n) {
-                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
+                $clean_name = preg_replace('/_+/', '_', strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran)));
                 $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
             }
 
@@ -329,7 +329,7 @@ class Skl extends CI_Controller {
             $this->load->model('Nilai_model');
             $nilai_siswa = $this->Nilai_model->get_nilai_with_mapel($siswa->id);
             foreach ($nilai_siswa as $n) {
-                $clean_name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran));
+                $clean_name = preg_replace('/_+/', '_', strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $n->nama_mata_pelajaran)));
                 $templateProcessor->setValue('n_' . $clean_name, $n->nilai);
             }
 
