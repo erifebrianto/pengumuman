@@ -89,6 +89,7 @@
                         <option value="nis_nama" <?= $pengaturan->verification_method == 'nis_nama' ? 'selected' : ''; ?>>NIS + Nama SISWA</option>
                         <option value="exam_number_nis" <?= $pengaturan->verification_method == 'exam_number_nis' ? 'selected' : ''; ?>>NOMER UJIAN + NIS</option>
                         <option value="nisn_exam_number" <?= $pengaturan->verification_method == 'nisn_exam_number' ? 'selected' : ''; ?>>NISN + Nomer UJIAN</option>
+                        <option value="exam_number" <?= $pengaturan->verification_method == 'exam_number' ? 'selected' : ''; ?>>NOMER UJIAN</option>
                     </select>
                     <small class="form-text text-muted">Tentukan kolom apa saja yang harus diisi siswa untuk mengecek kelulusan.</small>
                 </div>

@@ -64,7 +64,7 @@ class Skl extends CI_Controller {
         $data['background'] = $pengaturan->background ?? '';
         
         $method = $pengaturan->verification_method ?? 'exam_number_nis';
-        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis'])) {
+        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis', 'exam_number'])) {
             $method = 'exam_number_nis';
         }
         $data['verification_method'] = $method;
@@ -77,7 +77,7 @@ class Skl extends CI_Controller {
         $this->load->model('Setting_model');
         $pengaturan = $this->Setting_model->get_first();
         $method = $pengaturan->verification_method ?? 'exam_number_nis';
-        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis'])) {
+        if (!in_array($method, ['nisn', 'nis_nisn', 'nis_nama', 'exam_number_nis', 'nisn_exam_number', 'nis', 'exam_number'])) {
             $method = 'exam_number_nis';
         }
 
@@ -106,6 +106,11 @@ class Skl extends CI_Controller {
                 $nama = $this->input->post('nama_lengkap');
                 if (empty($nis) || empty($nama)) redirect('skl/search');
                 $fields = ['nis' => trim($nis), 'nama_lengkap' => trim($nama)];
+                break;
+            case 'exam_number':
+                $no_ujian = $this->input->post('no_ujian');
+                if (empty($no_ujian)) redirect('skl/search');
+                $fields = ['no_ujian' => trim($no_ujian)];
                 break;
             case 'exam_number_nis':
                 $no_ujian = $this->input->post('no_ujian');

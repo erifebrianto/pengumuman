@@ -58,6 +58,7 @@
               case 'nisn': echo 'Masukkan NISN Anda'; break;
               case 'nis_nisn': echo 'Masukkan NIS dan NISN Anda'; break;
               case 'nis_nama': echo 'Masukkan NIS dan Nama Lengkap Anda'; break;
+              case 'exam_number': echo 'Masukkan Nomor Ujian Anda'; break;
               case 'exam_number_nis': echo 'Masukkan Nomor Ujian dan NIS Anda'; break;
               case 'nisn_exam_number': echo 'Masukkan NISN dan Nomor Ujian Anda'; break;
               default: echo 'Masukkan data Anda'; break;
@@ -98,7 +99,7 @@
     <!-- Form Pencarian -->
     <form method="post" action="<?= base_url('skl/result') ?>" class="space-y-4 <?= (time() < $target_timestamp) ? 'hidden' : '' ?>" id="form-box">
         
-        <?php if (in_array($verification_method, ['exam_number_nis', 'nisn_exam_number'])): ?>
+        <?php if (in_array($verification_method, ['exam_number_nis', 'nisn_exam_number', 'exam_number'])): ?>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="bi bi-123 text-gray-400"></i>
