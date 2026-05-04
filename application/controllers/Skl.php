@@ -332,6 +332,8 @@ class Skl extends CI_Controller {
                 $statusRichText->addText(' / ', []);
                 $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
             }
+            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+
 
             // Perbaiki nomor urut tabel (re-numbering)
             $reflection = new ReflectionClass($templateProcessor);
@@ -563,6 +565,8 @@ class Skl extends CI_Controller {
                 $statusRichText->addText(' / ', []);
                 $statusRichText->addText('TIDAK LULUS', ['bold' => true]);
             }
+            $templateProcessor->setComplexValue('status_lulus_rich', $statusRichText);
+
 
             // Perbaiki nomor urut tabel (re-numbering)
             $reflection = new ReflectionClass($templateProcessor);
